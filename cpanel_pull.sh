@@ -60,7 +60,16 @@ fi
 echo "🗄️ [5/6] Menjalankan migrasi database & seeding soal..."
 $PHP_BIN artisan migrate --force --seed
 
-echo "⚡ [6/6] Melakukan link storage & optimasi cache..."
+echo "🔒 [6/7] Mengatur hak akses folder (permissions)..."
+chmod 755 /home/pesonaas/repositories 2>/dev/null || true
+chmod 755 /home/pesonaas/repositories/smartfun 2>/dev/null || true
+chmod 755 /home/pesonaas/repositories/smartfun/public 2>/dev/null || true
+chmod 644 /home/pesonaas/repositories/smartfun/public/index.php 2>/dev/null || true
+chmod 644 /home/pesonaas/repositories/smartfun/public/test.php 2>/dev/null || true
+chmod 644 /home/pesonaas/repositories/smartfun/public/.htaccess 2>/dev/null || true
+chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+
+echo "⚡ [7/7] Melakukan link storage & optimasi cache..."
 $PHP_BIN artisan storage:link 2>/dev/null || true
 $PHP_BIN artisan config:clear
 $PHP_BIN artisan route:clear

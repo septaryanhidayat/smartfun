@@ -164,12 +164,15 @@ class GameController extends Controller
             'active_powerup' => 'nullable|string',
         ]);
 
+        // Safety clamp: ensure response_time_ms never exceeds 180,000 ms (3 minutes)
+        $responseTimeMs = (int) min((int) $validated['response_time_ms'], 180000);
+
         try {
             $result = $this->gameEngine->submitAnswer(
                 (int) $validated['player_id'],
                 (int) $validated['question_id'],
                 isset($validated['option_id']) ? (int) $validated['option_id'] : null,
-                (int) $validated['response_time_ms'],
+                $responseTimeMs,
                 $validated['text_answer'] ?? null,
                 $validated['active_powerup'] ?? null
             );

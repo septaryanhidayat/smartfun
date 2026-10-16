@@ -881,10 +881,19 @@
             async chooseOption(optionId) {
                 if (this.isSubmittingAnswer) return;
                 this.isSubmittingAnswer = true;
-                this.currentStep = 'waiting';
+                // Safe elapsed response time calculation (never send an epoch timestamp)
+                const now = Date.now();
+                let responseTimeMs = 3000;
+                if (this.questionStartTime && this.questionStartTime > 0 && now >= this.questionStartTime) {
+                    responseTimeMs = now - this.questionStartTime;
+                } else if (this.timeLimitSeconds && this.timeLeft !== undefined) {
+                    responseTimeMs = Math.max(1000, (this.timeLimitSeconds - this.timeLeft) * 1000);
+                }
+                const maxTimeMs = Math.max(10000, (this.currentQuestion?.timeLimit || 30) * 1000);
+                responseTimeMs = Math.round(Math.max(100, Math.min(responseTimeMs, maxTimeMs)));
 
-                const responseTimeMs = Date.now() - this.questionStartTime;
                 clearInterval(this.timerInterval);
+                this.currentStep = 'waiting';
 
                 const qId = this.currentQuestion ? (this.currentQuestion.questionId || this.currentQuestion.id) : null;
                 if (!qId) {
@@ -1176,17 +1185,30 @@
                     }
                 }
 
-                // If Game Started from Lobby
-                if (!this.isPlayerFinished && state.status === 'active' && (!this.currentQuestion || !this.currentQuestion.questionId) && state.currentQuestion) {
-                    this.currentQuestion = state.currentQuestion;
-                    this.currentQuestionIndex = state.currentQuestion.questionIndex;
-                    this.totalQuestions = state.totalQuestions;
-                    if (!this.answeredQuestionIds.includes(state.currentQuestion.questionId)) {
-                        this.currentStep = 'active';
-                        this.startTimer(state.currentQuestion.timeLimit || 30);
-                    } else {
-                        this.currentStep = 'feedback';
+                // If Game Started from Lobby or Session Activated
+                if (!this.isPlayerFinished && state.status === 'active') {
+                    if (this.sessionStatus !== 'active' || (!this.currentQuestion || !this.currentQuestion.questionId)) {
+                        this.sessionStatus = 'active';
+                        if (state.currentQuestion) {
+                            this.currentQuestion = state.currentQuestion;
+                            this.currentQuestionIndex = state.currentQuestion.questionIndex;
+                            this.totalQuestions = state.totalQuestions;
+                        }
+                        const qId = this.currentQuestion ? (this.currentQuestion.questionId || this.currentQuestion.id) : null;
+                        if (qId) {
+                            if (!this.answeredQuestionIds.includes(qId)) {
+                                this.currentStep = 'active';
+                                this.startTimer(this.currentQuestion.timeLimit || 30);
+                            } else {
+                                this.currentStep = 'feedback';
+                            }
+                        }
                     }
+                }
+
+                // Extra safety: whenever step is active, ensure questionStartTime is valid
+                if (this.currentStep === 'active' && (!this.questionStartTime || this.questionStartTime <= 0)) {
+                    this.questionStartTime = Date.now();
                 }
             }
         };

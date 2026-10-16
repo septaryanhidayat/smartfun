@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\GameAnswer;
 use App\Models\GameSession;
 use App\Models\Option;
 use App\Models\Question;
@@ -107,6 +108,56 @@ test('player can submit answer and receive immediate feedback', function () {
                 'is_correct' => true,
             ],
         ]);
+});
+
+test('answer submission with huge timestamp response time is safely clamped without sql out of range error', function () {
+    $user = User::factory()->create();
+    $quiz = Quiz::create([
+        'user_id' => $user->id,
+        'title' => 'Kuis Batas Waktu',
+        'slug' => 'kuis-batas-waktu-'.uniqid(),
+        'theme' => 'arcade',
+    ]);
+
+    $question = Question::create([
+        'quiz_id' => $quiz->id,
+        'question_text' => 'Berapa batas waktu soal?',
+        'question_type' => 'multiple_choice',
+        'time_limit_seconds' => 30,
+        'base_points' => 1000,
+        'order_index' => 1,
+    ]);
+
+    $correctOpt = Option::create([
+        'question_id' => $question->id,
+        'option_text' => '30 Detik',
+        'is_correct' => true,
+        'order_index' => 1,
+    ]);
+
+    $engine = app(GameEngineService::class);
+    $session = $engine->createSession($quiz, $user);
+    $player = $engine->joinGame($session->pin, 'Budi Stopwatch', 'fox_spark');
+
+    // Simulate sending an epoch millisecond timestamp as response_time_ms
+    $answerResponse = $this->postJson('/api/game/answer', [
+        'player_id' => $player->id,
+        'question_id' => $question->id,
+        'option_id' => $correctOpt->id,
+        'response_time_ms' => 1792175478408,
+    ]);
+
+    $answerResponse->assertStatus(200)
+        ->assertJson([
+            'success' => true,
+            'result' => [
+                'is_correct' => true,
+            ],
+        ]);
+
+    $recordedAnswer = GameAnswer::where('game_session_id', $session->id)->first();
+    expect($recordedAnswer)->not->toBeNull();
+    expect($recordedAnswer->response_time_ms)->toBeLessThanOrEqual(40000);
 });
 
 test('unauthenticated guests and students cannot access host dashboard or quiz creator', function () {

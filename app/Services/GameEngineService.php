@@ -325,6 +325,11 @@ class GameEngineService
         }
 
         $question = Question::with('options')->findOrFail($questionId);
+
+        // Clamp response_time_ms to realistic question time limit to prevent integer overflow
+        $maxAllowedMs = max(10000, (($question->time_limit_seconds ?? 30) + 10) * 1000);
+        $timeMs = (int) max(0, min($timeMs, $maxAllowedMs));
+
         $isCorrect = false;
         $correctOption = $question->options->firstWhere('is_correct', true);
 

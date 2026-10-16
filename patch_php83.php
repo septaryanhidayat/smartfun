@@ -23,14 +23,23 @@ if (file_exists($pestLaravel)) {
     echo "✅ Pest-Plugin-Laravel autoloader dinetralkan.\n";
 }
 
-// 4. Patch Symfony Request.php (remove property hooks)
+// 4. Patch Symfony Request.php (remove property hooks & setRawValue)
 $requestFile = __DIR__ . '/vendor/symfony/http-foundation/Request.php';
 if (file_exists($requestFile)) {
     $content = file_get_contents($requestFile);
-    // Remove { set { ... } } on attributes, request, query, server, files, cookies, headers
+    
+    // Remove property hooks
     $pattern = '/public\s+([\w\\\\]+)\s+\$(\w+)\s*\{\s*set\s*\{[^}]*\}\s*\}/s';
     $replacement = 'public $1 $$2;';
     $newContent = preg_replace($pattern, $replacement, $content);
+    
+    // Replace setRawValue
+    $newContent = str_replace(
+        '$r->setRawValue($request, $value);',
+        '$request->$name = $value;',
+        $newContent
+    );
+
     if ($newContent !== $content) {
         file_put_contents($requestFile, $newContent);
         echo "✅ Symfony Request.php berhasil disesuaikan untuk PHP 8.3.\n";
@@ -39,13 +48,23 @@ if (file_exists($requestFile)) {
     }
 }
 
-// 5. Patch Symfony Response.php (remove property hooks)
+// 5. Patch Symfony Response.php (remove property hooks & setRawValue)
 $responseFile = __DIR__ . '/vendor/symfony/http-foundation/Response.php';
 if (file_exists($responseFile)) {
     $content = file_get_contents($responseFile);
+    
+    // Remove property hooks
     $pattern = '/public\s+([\w\\\\]+)\s+\$(\w+)\s*\{\s*set\s*\{[^}]*\}\s*\}/s';
     $replacement = 'public $1 $$2;';
     $newContent = preg_replace($pattern, $replacement, $content);
+
+    // Replace setRawValue
+    $newContent = str_replace(
+        '$r->setRawValue($response, $headers);',
+        '$response->headers = $headers;',
+        $newContent
+    );
+
     if ($newContent !== $content) {
         file_put_contents($responseFile, $newContent);
         echo "✅ Symfony Response.php berhasil disesuaikan untuk PHP 8.3.\n";

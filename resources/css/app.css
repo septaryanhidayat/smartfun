@@ -2,8 +2,134 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+@source '../js/**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Plus Jakarta Sans', 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --color-arena-dark: #120426;
+    --color-arena-purple: #240a49;
+    --color-arena-light: #3b1473;
+    
+    --color-quiz-red: #e21b3c;
+    --color-quiz-red-shadow: #a01229;
+    
+    --color-quiz-blue: #1368ce;
+    --color-quiz-blue-shadow: #0a4387;
+    
+    --color-quiz-yellow: #d89e00;
+    --color-quiz-yellow-shadow: #966e00;
+    
+    --color-quiz-green: #26890c;
+    --color-quiz-green-shadow: #175707;
+}
+
+/* Custom Tactile 3D Button Utilities */
+.btn-3d {
+    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-3d:active {
+    transform: translateY(4px);
+}
+
+.btn-3d-red {
+    background-color: #e21b3c;
+    border-bottom: 5px solid #a01229;
+    color: #ffffff;
+}
+.btn-3d-red:active {
+    border-bottom-width: 1px;
+}
+
+.btn-3d-blue {
+    background-color: #1368ce;
+    border-bottom: 5px solid #0a4387;
+    color: #ffffff;
+}
+.btn-3d-blue:active {
+    border-bottom-width: 1px;
+}
+
+.btn-3d-yellow {
+    background-color: #d89e00;
+    border-bottom: 5px solid #966e00;
+    color: #ffffff;
+}
+.btn-3d-yellow:active {
+    border-bottom-width: 1px;
+}
+
+.btn-3d-green {
+    background-color: #26890c;
+    border-bottom: 5px solid #175707;
+    color: #ffffff;
+}
+.btn-3d-green:active {
+    border-bottom-width: 1px;
+}
+
+.btn-3d-purple {
+    background-color: #7c3aed;
+    border-bottom: 5px solid #5b21b6;
+    color: #ffffff;
+}
+.btn-3d-purple:active {
+    border-bottom-width: 1px;
+}
+
+.btn-3d-dark {
+    background-color: #1e1b4b;
+    border-bottom: 5px solid #0f0d28;
+    color: #ffffff;
+}
+.btn-3d-dark:active {
+    border-bottom-width: 1px;
+}
+
+/* Animations */
+@keyframes popIn {
+    0% { transform: scale(0.6) translateY(20px); opacity: 0; }
+    70% { transform: scale(1.08) translateY(-4px); opacity: 1; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.animate-pop-in {
+    animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); }
+    50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.8); }
+}
+
+.animate-pulse-glow {
+    animation: pulseGlow 2s infinite;
+}
+
+@keyframes floatSlow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.animate-float {
+    animation: floatSlow 3s ease-in-out infinite;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #18092f;
+}
+::-webkit-scrollbar-thumb {
+    background: #491c83;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #6b21a8;
 }

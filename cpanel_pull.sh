@@ -55,6 +55,9 @@ if [ -d "vendor" ]; then
     if [ -f "vendor/composer/platform_check.php" ]; then
         echo '<?php $issues = [];' > vendor/composer/platform_check.php
     fi
+    if [ -f "vendor/nunomaduro/collision/src/Adapters/Phpunit/Autoload.php" ]; then
+        echo '<?php // disabled' > vendor/nunomaduro/collision/src/Adapters/Phpunit/Autoload.php
+    fi
 fi
 
 if [ ! -d "vendor" ]; then

@@ -42,8 +42,20 @@ if [ ! -f ".env" ]; then
     echo "⚠️ Silakan sesuaikan kredensial DB_DATABASE, DB_USERNAME, dan DB_PASSWORD di .env jika belum."
 fi
 
-echo "📦 [4/6] Menginstal dependensi Composer..."
-$PHP_BIN $COMPOSER_BIN install --no-dev --optimize-autoloader --no-interaction
+echo "📦 [4/6] Memeriksa & menginstal dependensi (folder vendor)..."
+if [ ! -d "vendor" ]; then
+    if [ -f "vendor.zip" ]; then
+        echo "Mengekstrak vendor.zip bawaan..."
+        unzip -q -o vendor.zip
+    elif command -v unzip >/dev/null 2>&1 && [ -f "vendor.zip" ]; then
+        unzip -q -o vendor.zip
+    fi
+fi
+
+if [ ! -d "vendor" ]; then
+    echo "Menjalankan composer install..."
+    $PHP_BIN $COMPOSER_BIN install --no-dev --optimize-autoloader --no-interaction 2>/dev/null || true
+fi
 
 echo "🗄️ [5/6] Menjalankan migrasi database & seeding soal..."
 $PHP_BIN artisan migrate --force --seed

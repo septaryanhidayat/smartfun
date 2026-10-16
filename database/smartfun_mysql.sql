@@ -1,17 +1,32 @@
 -- ========================================================
 -- SmartFun Complete MySQL Database Dump (Schema + Data)
 -- Siap diimpor ke database cPanel (misal: pesonaas_smartfun)
--- Generated: 2026-10-16 16:27:51
+-- Generated: 2026-10-16 16:31:57
 -- ========================================================
 
 SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
+DROP TABLE IF EXISTS `game_answers`;
+DROP TABLE IF EXISTS `game_players`;
+DROP TABLE IF EXISTS `game_sessions`;
+DROP TABLE IF EXISTS `options`;
+DROP TABLE IF EXISTS `questions`;
+DROP TABLE IF EXISTS `quizzes`;
+DROP TABLE IF EXISTS `failed_jobs`;
+DROP TABLE IF EXISTS `job_batches`;
+DROP TABLE IF EXISTS `jobs`;
+DROP TABLE IF EXISTS `cache_locks`;
+DROP TABLE IF EXISTS `cache`;
+DROP TABLE IF EXISTS `sessions`;
+DROP TABLE IF EXISTS `password_reset_tokens`;
+DROP TABLE IF EXISTS `users`;
+
 -- --------------------------------------------------------
 -- Struktur tabel `users`
 -- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `users` (
+CREATE TABLE `users` (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
@@ -24,14 +39,14 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `users_email_unique` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
+CREATE TABLE `password_reset_tokens` (
   `email` varchar(255) NOT NULL,
   `token` varchar(255) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `sessions` (
+CREATE TABLE `sessions` (
   `id` varchar(255) NOT NULL,
   `user_id` bigint(20) UNSIGNED DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
@@ -43,21 +58,21 @@ CREATE TABLE IF NOT EXISTS `sessions` (
   KEY `sessions_last_activity_index` (`last_activity`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `cache` (
+CREATE TABLE `cache` (
   `key` varchar(255) NOT NULL,
   `value` mediumtext NOT NULL,
   `expiration` int(11) NOT NULL,
   PRIMARY KEY (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `cache_locks` (
+CREATE TABLE `cache_locks` (
   `key` varchar(255) NOT NULL,
   `owner` varchar(255) NOT NULL,
   `expiration` int(11) NOT NULL,
   PRIMARY KEY (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `jobs` (
+CREATE TABLE `jobs` (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `queue` varchar(255) NOT NULL,
   `payload` longtext NOT NULL,
@@ -69,7 +84,7 @@ CREATE TABLE IF NOT EXISTS `jobs` (
   KEY `jobs_queue_index` (`queue`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `job_batches` (
+CREATE TABLE `job_batches` (
   `id` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
   `total_jobs` int(11) NOT NULL,
@@ -83,7 +98,7 @@ CREATE TABLE IF NOT EXISTS `job_batches` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `failed_jobs` (
+CREATE TABLE `failed_jobs` (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `uuid` varchar(255) NOT NULL,
   `connection` text NOT NULL,
@@ -95,14 +110,14 @@ CREATE TABLE IF NOT EXISTS `failed_jobs` (
   UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `quizzes` (
+CREATE TABLE `quizzes` (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` bigint(20) UNSIGNED NOT NULL,
   `title` varchar(255) NOT NULL,
   `slug` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
   `cover_image` varchar(255) DEFAULT NULL,
-  `theme` varchar(255) NOT NULL DEFAULT 'arcade',
+  `theme` varchar(50) NOT NULL DEFAULT 'default',
   `is_public` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
@@ -111,16 +126,16 @@ CREATE TABLE IF NOT EXISTS `quizzes` (
   KEY `quizzes_user_id_foreign` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `questions` (
+CREATE TABLE `questions` (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `quiz_id` bigint(20) UNSIGNED NOT NULL,
   `question_text` text NOT NULL,
-  `question_type` varchar(255) NOT NULL DEFAULT 'multiple_choice',
+  `question_type` varchar(30) NOT NULL DEFAULT 'multiple_choice',
   `media_url` varchar(255) DEFAULT NULL,
-  `media_type` varchar(255) DEFAULT NULL,
-  `time_limit_seconds` int(11) NOT NULL DEFAULT 30,
-  `base_points` int(11) NOT NULL DEFAULT 1000,
-  `order_index` int(11) NOT NULL DEFAULT 1,
+  `media_type` varchar(20) DEFAULT NULL,
+  `time_limit_seconds` int(10) UNSIGNED NOT NULL DEFAULT 30,
+  `base_points` int(10) UNSIGNED NOT NULL DEFAULT 1000,
+  `order_index` int(10) UNSIGNED NOT NULL DEFAULT 1,
   `explanation` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
@@ -128,53 +143,56 @@ CREATE TABLE IF NOT EXISTS `questions` (
   KEY `questions_quiz_id_foreign` (`quiz_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `options` (
+CREATE TABLE `options` (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `question_id` bigint(20) UNSIGNED NOT NULL,
   `option_text` text NOT NULL,
+  `media_url` varchar(255) DEFAULT NULL,
   `is_correct` tinyint(1) NOT NULL DEFAULT 0,
-  `order_index` int(11) NOT NULL DEFAULT 1,
+  `order_index` int(10) UNSIGNED NOT NULL DEFAULT 1,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `options_question_id_foreign` (`question_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `game_sessions` (
+CREATE TABLE `game_sessions` (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `quiz_id` bigint(20) UNSIGNED NOT NULL,
   `host_user_id` bigint(20) UNSIGNED NOT NULL,
-  `pin` varchar(6) NOT NULL,
-  `mode` varchar(255) NOT NULL DEFAULT 'live_student',
-  `status` varchar(255) NOT NULL DEFAULT 'lobby',
-  `current_question_index` int(11) NOT NULL DEFAULT 0,
-  `question_started_at` timestamp NULL DEFAULT NULL,
+  `pin` varchar(8) NOT NULL,
+  `mode` varchar(30) NOT NULL DEFAULT 'live_student',
+  `status` varchar(30) NOT NULL DEFAULT 'lobby',
+  `current_question_index` int(10) UNSIGNED NOT NULL DEFAULT 0,
   `settings` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`settings`)),
+  `started_at` timestamp NULL DEFAULT NULL,
+  `ended_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `game_sessions_pin_unique` (`pin`),
   KEY `game_sessions_quiz_id_foreign` (`quiz_id`),
-  KEY `game_sessions_host_user_id_foreign` (`host_user_id`)
+  KEY `game_sessions_host_user_id_foreign` (`host_user_id`),
+  KEY `idx_pin_status` (`pin`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `game_players` (
+CREATE TABLE `game_players` (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `game_session_id` bigint(20) UNSIGNED NOT NULL,
-  `nickname` varchar(255) NOT NULL,
+  `nickname` varchar(50) NOT NULL,
   `avatar_url` varchar(255) DEFAULT NULL,
   `total_score` int(11) NOT NULL DEFAULT 0,
   `current_streak` int(11) NOT NULL DEFAULT 0,
-  `highest_streak` int(11) NOT NULL DEFAULT 0,
-  `power_ups_inventory` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`power_ups_inventory`)),
   `final_rank` int(11) DEFAULT NULL,
+  `is_connected` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_session_player` (`game_session_id`, `nickname`),
   KEY `game_players_game_session_id_foreign` (`game_session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `game_answers` (
+CREATE TABLE `game_answers` (
   `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `game_session_id` bigint(20) UNSIGNED NOT NULL,
   `game_player_id` bigint(20) UNSIGNED NOT NULL,
@@ -182,15 +200,17 @@ CREATE TABLE IF NOT EXISTS `game_answers` (
   `option_id` bigint(20) UNSIGNED DEFAULT NULL,
   `text_answer` text DEFAULT NULL,
   `is_correct` tinyint(1) NOT NULL DEFAULT 0,
-  `response_time_ms` int(11) NOT NULL DEFAULT 0,
-  `points_awarded` int(11) NOT NULL DEFAULT 0,
-  `active_powerup_used` varchar(255) DEFAULT NULL,
+  `response_time_ms` int(10) UNSIGNED NOT NULL,
+  `points_awarded` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `streak_multiplier` decimal(3,2) NOT NULL DEFAULT 1.00,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `game_answers_game_session_id_foreign` (`game_session_id`),
   KEY `game_answers_game_player_id_foreign` (`game_player_id`),
-  KEY `game_answers_question_id_foreign` (`question_id`)
+  KEY `game_answers_question_id_foreign` (`question_id`),
+  KEY `game_answers_option_id_foreign` (`option_id`),
+  KEY `idx_session_question` (`game_session_id`, `question_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Dumping data for `users`

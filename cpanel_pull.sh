@@ -45,8 +45,8 @@ fi
 echo "📦 [4/6] Menginstal dependensi Composer..."
 $PHP_BIN $COMPOSER_BIN install --no-dev --optimize-autoloader --no-interaction
 
-echo "🗄️ [5/6] Menjalankan migrasi database..."
-$PHP_BIN artisan migrate --force
+echo "🗄️ [5/6] Menjalankan migrasi database & seeding soal..."
+$PHP_BIN artisan migrate --force --seed
 
 echo "⚡ [6/6] Melakukan link storage & optimasi cache..."
 $PHP_BIN artisan storage:link 2>/dev/null || true

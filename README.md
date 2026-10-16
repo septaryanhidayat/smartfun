@@ -1,58 +1,96 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🚀 SmartFun - Platform Kuis Interaktif & Gamifikasi Seru
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+SmartFun adalah platform web kuis edukasi gamifikasi interaktif modern (terinspirasi dari perpaduan terbaik **Quizizz**, **Kahoot**, dan **Wayground**) yang dibangun dengan **Laravel 13**, **PHP 8.4**, **Tailwind CSS**, **Alpine.js**, dan mesin audio sintetis **Web Audio API**.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🌟 Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 1. 🎮 3 Mode Permainan Berbeda
+- **⚡ Mode Quizizz (Student-Paced)**: Siswa menjawab mandiri dengan ritme masing-masing, kartu power-up acak (*50-50, 2x Multiplier, Streak Shield, Time Freeze*), avatar dinamis, dan pembaruan klasemen live.
+- **🎯 Mode Kahoot (Host-Paced Proyektor)**: Pertanyaan tampil di layar utama proyektor kelas, siswa adu cepat serempak menggunakan tombol bentuk warna (*Merah ▲, Biru ◆, Kuning ●, Hijau ◼*).
+- **🗺️ Mode Wayground Quest Map**: Peta petualangan visual bercabang dengan level rintangan dan target 3 bintang (*1–3 Stars*).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 2. 🧠 Bank Soal Siap Pakai (90 Soal Berkualitas)
+- **🧠 Mega Bank 50 Soal Pengetahuan Umum**: Geografi dunia & nusantara, sejarah penemuan, sains alam, biologi, seni, dan budaya dengan penjelasan edukatif lengkap.
+- **🚀 Sains Galaksi & Rahasia Alam Semesta**: 20 Soal eksplorasi kosmik & astronomi.
+- **🗺️ Wayground: Ekspedisi Hutan Kristal**: 20 Soal petualangan quest bertahap.
 
-## Learning Laravel
+### 3. 🎛️ Pilihan Fleksibel Jumlah Soal
+Host/Guru dapat memilih berapa banyak soal yang ingin dimainkan per sesi:
+- **5 Soal** (Kilat / Ice Breaking)
+- **10 Soal** (Standar)
+- **20 Soal** (Tantangan)
+- **25 Soal** (Setengah Bank)
+- **40 Soal** (Marathon)
+- **50 Soal** (Mega Bank Penuh)
+- **Semua Soal** (Sesuai total koleksi)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 4. 🎵 5 Suasana Visual & Backsound Musik Seru (Web Audio API)
+Mesin audio sintetis procedural multi-track (Kick, Snare, Hi-Hat, Bassline, dan Lead Arpeggio) tanpa beban file audio MP3 berat:
+- 🕹️ **Arcade Neon Party** (128 BPM Chiptune Funky EDM)
+- 🚀 **Galaksi Antariksa** (118 BPM Synthwave Cosmic Groove)
+- 🌿 **Hutan Kristal** (122 BPM Celtic Folk Adventure Beat)
+- ⚡ **Cyberpunk 2099** (132 BPM Driving High-Octane Techno)
+- 🔥 **Lava Showdown** (138 BPM Fiery Rock-Synth Tensi Tinggi)
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 5. 🏆 Klasemen & Peringkat Lengkap Seluruh Peserta
+- Menampilkan ranking seluruh peserta yang bergabung (tidak terpotong hanya 3 atau 5 besar), baik di layar proyektor host maupun layar smartphone siswa.
+- Tabel podium 3D + rekapitulasi nilai lengkap seluruh peserta di akhir sesi kuis.
+- Fitur ekspor laporan nilai ke file Excel/CSV.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
+## 🛠️ Instalasi & Menjalankan Lokal
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
+### 1. Klon Repositori
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/septaryanhidayat/smartfun.git
+cd smartfun
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Pasang Dependensi
+```bash
+composer install
+npm install
+```
 
-## Contributing
+### 3. Konfigurasi Lingkungan (.env)
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 4. Database & Seeding
+Untuk SQLite (default lokal):
+```bash
+touch database/database.sqlite
+php artisan migrate --seed
+```
 
-## Code of Conduct
+Untuk MySQL (Server / Hosting):
+```bash
+# Pastikan database 'smartfun' sudah dibuat di MySQL
+# Atur kredensial DB_CONNECTION=mysql di file .env
+php artisan migrate --seed
+```
+*Atau impor langsung file dump SQL lengkap yang sudah disediakan di:*  
+`database/smartfun_mysql.sql`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 5. Kompilasi Frontend & Jalankan Server
+```bash
+npm run build
+php artisan serve
+```
+Akses di browser: `http://localhost:8000`
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 👨‍🏫 Akun Demo Pendidik / Guru
+- **Email**: `guru@smartfun.test`
+- **Password**: `password123`
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 📄 Lisensi
+Open-source di bawah lisensi [MIT](LICENSE).

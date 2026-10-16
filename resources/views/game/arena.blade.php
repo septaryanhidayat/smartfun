@@ -211,7 +211,14 @@
         <p class="text-sm text-purple-300 max-w-sm mx-auto mb-4">
             Waktumu tercatat! Memproses hasil dan klasemen...
         </p>
-        <div class="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+        <div class="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mb-6"></div>
+
+        <button 
+            type="button" 
+            @click="checkAnswerStatus()"
+            class="px-5 py-2.5 rounded-xl bg-purple-800/80 hover:bg-purple-700 text-purple-100 text-xs font-black border border-purple-600 transition-all shadow-lg flex items-center gap-2 cursor-pointer">
+            <span>⚡</span> Tampilkan Hasil & Klasemen
+        </button>
     </div>
 
     <!-- ======================================================== -->
@@ -250,6 +257,17 @@
                         <h2 class="text-2xl sm:text-3xl font-black text-white">KURANG TEPAT!</h2>
                     </div>
                     <span class="text-base font-bold text-rose-300 block">+0 Poin</span>
+                </div>
+            </template>
+
+            <!-- Graceful Fallback Banner if lastAnswerResult is null/reloaded -->
+            <template x-if="!lastAnswerResult">
+                <div class="bg-purple-950/90 border border-purple-700/80 p-5 rounded-3xl shadow-2xl backdrop-blur-md text-center">
+                    <div class="flex items-center justify-center gap-3 mb-1">
+                        <span class="w-10 h-10 rounded-full bg-purple-700 text-white flex items-center justify-center text-xl font-black shadow-lg">✓</span>
+                        <h2 class="text-xl sm:text-2xl font-black text-white">JAWABAN TELAH TERCATAT</h2>
+                    </div>
+                    <p class="text-xs text-purple-300">Hasil dan posisimu telah terdaftar di klasemen sementara.</p>
                 </div>
             </template>
 
@@ -759,25 +777,56 @@
                 const responseTimeMs = Date.now() - this.questionStartTime;
                 clearInterval(this.timerInterval);
 
+                const qId = this.currentQuestion ? (this.currentQuestion.questionId || this.currentQuestion.id) : null;
+                if (!qId) {
+                    console.error('No question ID found to submit');
+                    this.currentStep = 'active';
+                    this.isSubmittingAnswer = false;
+                    return;
+                }
+
+                // Safety watchdog: ensure player is never permanently stuck in 'waiting'
+                const safetyTimer = setTimeout(() => {
+                    if (this.currentStep === 'waiting') {
+                        if (this.lastAnswerResult || this.answeredQuestionIds.includes(qId)) {
+                            this.currentStep = 'feedback';
+                        } else {
+                            this.currentStep = 'active';
+                        }
+                        this.isSubmittingAnswer = false;
+                    }
+                }, 4000);
+
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '{{ csrf_token() }}';
+
                 try {
                     const res = await fetch('{{ route("game.answer") }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-CSRF-TOKEN': csrfToken,
                             'Accept': 'application/json'
                         },
                         body: JSON.stringify({
                             player_id: this.player.id,
-                            question_id: this.currentQuestion.questionId,
+                            question_id: qId,
                             option_id: optionId,
                             response_time_ms: responseTimeMs,
                             active_powerup: this.activePowerUp
                         })
                     });
 
-                    const data = await res.json();
-                    if (data.success) {
+                    clearTimeout(safetyTimer);
+
+                    let data = null;
+                    try {
+                        data = await res.json();
+                    } catch (parseErr) {
+                        console.error('Failed to parse response as JSON:', parseErr);
+                    }
+
+                    if (data && data.success && data.result) {
                         this.lastAnswerResult = data.result;
                         this.player.score = data.result.total_score;
                         this.player.streak = data.result.current_streak;
@@ -795,10 +844,8 @@
                             if (window.SmartFunAudio) window.SmartFunAudio.playWrong();
                         }
 
-                        if (this.currentQuestion && this.currentQuestion.questionId) {
-                            if (!this.answeredQuestionIds.includes(this.currentQuestion.questionId)) {
-                                this.answeredQuestionIds.push(this.currentQuestion.questionId);
-                            }
+                        if (!this.answeredQuestionIds.includes(qId)) {
+                            this.answeredQuestionIds.push(qId);
                         }
 
                         // Consume active powerup
@@ -813,12 +860,54 @@
                         if (this.sessionMode !== 'live_host' || data.result.is_last_question) {
                             this.startAutoAdvanceCountdown();
                         }
+                    } else {
+                        console.error('Answer submission returned unsuccessful:', data);
+
+                        // If already answered, gracefully transition to feedback
+                        if (data && data.result) {
+                            this.lastAnswerResult = data.result;
+                            this.player.score = data.result.total_score;
+                            this.player.streak = data.result.current_streak;
+                            this.player.rank = data.result.player_rank || this.player.rank;
+                            if (data.result.leaderboard) {
+                                this.leaderboard = data.result.leaderboard;
+                                this.podium = data.result.leaderboard.slice(0, 3);
+                            }
+                            if (!this.answeredQuestionIds.includes(qId)) {
+                                this.answeredQuestionIds.push(qId);
+                            }
+                            this.currentStep = 'feedback';
+                            if (this.sessionMode !== 'live_host' || data.result.is_last_question) {
+                                this.startAutoAdvanceCountdown();
+                            }
+                        } else {
+                            // Revert step back to active so user can retry
+                            this.currentStep = 'active';
+                            alert(data?.message || 'Gagal mengirim jawaban (Status: ' + res.status + '). Silakan coba pilih kembali.');
+                        }
                     }
                 } catch (e) {
-                    console.error('Answer submission error:', e);
+                    clearTimeout(safetyTimer);
+                    console.error('Answer submission network error:', e);
+                    this.currentStep = 'active';
+                    alert('Terjadi gangguan jaringan saat mengirim jawaban. Silakan coba pilih kembali.');
                 } finally {
                     this.isSubmittingAnswer = false;
                 }
+            },
+
+            checkAnswerStatus() {
+                if (this.lastAnswerResult) {
+                    this.currentStep = 'feedback';
+                    return;
+                }
+                const qId = this.currentQuestion ? (this.currentQuestion.questionId || this.currentQuestion.id) : null;
+                if (qId && this.answeredQuestionIds.includes(qId)) {
+                    this.currentStep = 'feedback';
+                } else {
+                    this.currentStep = 'active';
+                }
+                this.pollState();
             },
 
             startAutoAdvanceCountdown() {
@@ -916,6 +1005,11 @@
                         this.player.score = me.score;
                         this.player.streak = me.streak;
                     }
+                }
+
+                // Auto-advance if answer result exists while waiting
+                if (this.currentStep === 'waiting' && this.lastAnswerResult) {
+                    this.currentStep = 'feedback';
                 }
 
                 // Handle Game Finish from Server

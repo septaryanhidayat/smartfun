@@ -8,6 +8,7 @@ use App\Models\Quiz;
 use App\Services\GameEngineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -165,10 +166,10 @@ class GameController extends Controller
 
         try {
             $result = $this->gameEngine->submitAnswer(
-                $validated['player_id'],
-                $validated['question_id'],
-                $validated['option_id'] ?? null,
-                $validated['response_time_ms'],
+                (int) $validated['player_id'],
+                (int) $validated['question_id'],
+                isset($validated['option_id']) ? (int) $validated['option_id'] : null,
+                (int) $validated['response_time_ms'],
                 $validated['text_answer'] ?? null,
                 $validated['active_powerup'] ?? null
             );
@@ -178,6 +179,11 @@ class GameController extends Controller
                 'result' => $result,
             ]);
         } catch (\Throwable $e) {
+            Log::error('Answer submission error: '.$e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'payload' => $request->all(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),

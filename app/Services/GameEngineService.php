@@ -84,7 +84,10 @@ class GameEngineService
             'settings' => $sessionSettings,
         ]);
 
-        Cache::put("game:{$pin}:session", $session->id, 86400);
+        try {
+            Cache::put("game:{$pin}:session", $session->id, 86400);
+        } catch (\Throwable $e) {
+        }
 
         return $session;
     }
@@ -126,14 +129,17 @@ class GameEngineService
 
         $totalPlayers = GamePlayer::where('game_session_id', $session->id)->count();
 
-        // Update Cache/Redis
-        Cache::put("game:{$pin}:player:{$player->id}", [
-            'id' => $player->id,
-            'nickname' => $player->nickname,
-            'avatar' => $player->avatar_url,
-            'score' => 0,
-            'streak' => 0,
-        ], 86400);
+        // Update Cache/Redis (safe fallback)
+        try {
+            Cache::put("game:{$pin}:player:{$player->id}", [
+                'id' => $player->id,
+                'nickname' => $player->nickname,
+                'avatar' => $player->avatar_url,
+                'score' => 0,
+                'streak' => 0,
+            ], 86400);
+        } catch (\Throwable $e) {
+        }
 
         // Broadcast PlayerJoined
         try {
@@ -223,7 +229,10 @@ class GameEngineService
             'startedAt' => now()->timestamp,
         ];
 
-        Cache::put("game:{$pin}:current_question", $payload, 86400);
+        try {
+            Cache::put("game:{$pin}:current_question", $payload, 86400);
+        } catch (\Throwable $e) {
+        }
 
         try {
             broadcast(new QuestionStarted($pin, $payload));
@@ -246,72 +255,74 @@ class GameEngineService
         ?string $textAnswer = null,
         ?string $activePowerUp = null
     ): array {
-        $player = GamePlayer::with('gameSession')->findOrFail($playerId);
+        $player = GamePlayer::with('gameSession.quiz.questions.options')->findOrFail($playerId);
         $session = $player->gameSession;
+        $session->loadMissing('quiz.questions.options');
         $pin = $session->pin;
 
-        // Idempotency check: prevent double answers for the same question
-        $lockKey = "game:{$pin}:answered:{$playerId}:{$questionId}";
-        if (Cache::has($lockKey)) {
-            $existing = GameAnswer::where('game_session_id', $session->id)
-                ->where('game_player_id', $playerId)
-                ->where('question_id', $questionId)
-                ->first();
+        // Idempotency check: check database first to prevent duplicate answers
+        $existing = GameAnswer::where('game_session_id', $session->id)
+            ->where('game_player_id', $playerId)
+            ->where('question_id', $questionId)
+            ->first();
 
-            if ($existing) {
-                $question = Question::with('options')->find($questionId);
-                $correctOption = $question?->options->firstWhere('is_correct', true);
-                $questions = $this->getSessionQuestions($session);
-                $totalQuestions = $questions->count();
-                $currentSessionQIdx = $questions->search(fn ($q) => $q->id === $questionId);
-                $nextQuestion = ($currentSessionQIdx !== false && $currentSessionQIdx + 1 < $totalQuestions)
-                    ? $questions->get($currentSessionQIdx + 1)
-                    : null;
+        if ($existing) {
+            $question = Question::with('options')->find($questionId);
+            $correctOption = $question?->options->firstWhere('is_correct', true);
+            $questions = $this->getSessionQuestions($session);
+            $totalQuestions = $questions->count();
+            $currentSessionQIdx = $questions->search(fn ($q) => $q->id === $questionId);
+            $nextQuestion = ($currentSessionQIdx !== false && $currentSessionQIdx + 1 < $totalQuestions)
+                ? $questions->get($currentSessionQIdx + 1)
+                : null;
 
-                $nextQuestionPayload = null;
-                if ($nextQuestion) {
-                    $nextQuestionPayload = [
-                        'questionIndex' => $currentSessionQIdx + 2,
-                        'totalQuestions' => $totalQuestions,
-                        'questionId' => $nextQuestion->id,
-                        'text' => $nextQuestion->question_text,
-                        'questionType' => $nextQuestion->question_type,
-                        'media' => $nextQuestion->media_url,
-                        'mediaType' => $nextQuestion->media_type,
-                        'options' => $nextQuestion->options->map(fn ($opt) => [
-                            'id' => $opt->id,
-                            'text' => $opt->option_text,
-                            'media' => $opt->media_url,
-                            'order_index' => $opt->order_index,
-                        ])->values()->all(),
-                        'timeLimit' => $nextQuestion->time_limit_seconds,
-                        'basePoints' => $nextQuestion->base_points,
-                    ];
-                }
-
-                $playerRank = GamePlayer::where('game_session_id', $session->id)
-                    ->where('total_score', '>', $player->total_score)
-                    ->count() + 1;
-                $totalPlayers = GamePlayer::where('game_session_id', $session->id)->count();
-
-                return [
-                    'already_answered' => true,
-                    'is_correct' => (bool) $existing->is_correct,
-                    'points_awarded' => (int) $existing->points_awarded,
-                    'total_score' => $player->total_score,
-                    'current_streak' => $player->current_streak,
-                    'correct_option_id' => $correctOption ? $correctOption->id : null,
-                    'explanation' => $question?->explanation,
-                    'player_rank' => $playerRank,
-                    'total_players' => $totalPlayers,
-                    'leaderboard' => $this->getLiveLeaderboard($pin),
-                    'next_question' => $nextQuestionPayload,
-                    'is_last_question' => $nextQuestion === null,
+            $nextQuestionPayload = null;
+            if ($nextQuestion) {
+                $nextQuestionPayload = [
+                    'questionIndex' => $currentSessionQIdx + 2,
+                    'totalQuestions' => $totalQuestions,
+                    'questionId' => $nextQuestion->id,
+                    'text' => $nextQuestion->question_text,
+                    'questionType' => $nextQuestion->question_type,
+                    'media' => $nextQuestion->media_url,
+                    'mediaType' => $nextQuestion->media_type,
+                    'options' => $nextQuestion->options->map(fn ($opt) => [
+                        'id' => $opt->id,
+                        'text' => $opt->option_text,
+                        'media' => $opt->media_url,
+                        'order_index' => $opt->order_index,
+                    ])->values()->all(),
+                    'timeLimit' => $nextQuestion->time_limit_seconds,
+                    'basePoints' => $nextQuestion->base_points,
                 ];
             }
+
+            $playerRank = GamePlayer::where('game_session_id', $session->id)
+                ->where('total_score', '>', $player->total_score)
+                ->count() + 1;
+            $totalPlayers = GamePlayer::where('game_session_id', $session->id)->count();
+
+            return [
+                'already_answered' => true,
+                'is_correct' => (bool) $existing->is_correct,
+                'points_awarded' => (int) $existing->points_awarded,
+                'total_score' => $player->total_score,
+                'current_streak' => $player->current_streak,
+                'correct_option_id' => $correctOption ? $correctOption->id : null,
+                'explanation' => $question?->explanation,
+                'player_rank' => $playerRank,
+                'total_players' => $totalPlayers,
+                'leaderboard' => $this->getLiveLeaderboard($pin),
+                'next_question' => $nextQuestionPayload,
+                'is_last_question' => $nextQuestion === null,
+            ];
         }
 
-        Cache::put($lockKey, 1, 300);
+        try {
+            $lockKey = "game:{$pin}:answered:{$playerId}:{$questionId}";
+            Cache::put($lockKey, 1, 300);
+        } catch (\Throwable $e) {
+        }
 
         $question = Question::with('options')->findOrFail($questionId);
         $isCorrect = false;

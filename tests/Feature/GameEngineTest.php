@@ -78,4 +78,10 @@ test('player can submit answer and update score and streak', function () {
         ->and($result['player_rank'])->toBe(1)
         ->and($result['leaderboard'])->toHaveCount(1)
         ->and($result['is_last_question'])->toBeTrue();
+
+    // Repeated answer submission should return already_answered gracefully
+    $repeatedResult = $engine->submitAnswer($player->id, $question->id, $opt1->id, 5000);
+    expect($repeatedResult['already_answered'])->toBeTrue()
+        ->and($repeatedResult['is_correct'])->toBeTrue()
+        ->and($repeatedResult['total_score'])->toBe($result['total_score']);
 });

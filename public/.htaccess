@@ -7,6 +7,8 @@
 </IfModule>
 # php -- END cPanel-generated handler, do not edit
 
+DirectoryIndex index.php
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

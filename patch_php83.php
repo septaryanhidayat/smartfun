@@ -73,4 +73,51 @@ if (file_exists($responseFile)) {
     }
 }
 
+// 6. Patch VarCloner.php (wrap new \ReflectionClass in parentheses)
+$varClonerFile = __DIR__ . '/vendor/symfony/var-dumper/Cloner/VarCloner.php';
+if (file_exists($varClonerFile)) {
+    $content = file_get_contents($varClonerFile);
+    $newContent = str_replace(
+        'new \ReflectionClass($v)->isUserDefined()',
+        '(new \ReflectionClass($v))->isUserDefined()',
+        $content
+    );
+    if ($newContent !== $content) {
+        file_put_contents($varClonerFile, $newContent);
+        echo "✅ Symfony VarCloner.php berhasil disesuaikan untuk PHP 8.3.\n";
+    } else {
+        echo "ℹ️ Symfony VarCloner.php sudah kompatibel.\n";
+    }
+}
+
+// 7. Patch AddConsoleCommandPass.php (wrap new Definition in parentheses)
+$passFile = __DIR__ . '/vendor/symfony/console/DependencyInjection/AddConsoleCommandPass.php';
+if (file_exists($passFile)) {
+    $content = file_get_contents($passFile);
+    $newContent = str_replace(
+        'new Definition(\Closure::class)',
+        '(new Definition(\Closure::class))',
+        $content
+    );
+    if ($newContent !== $content) {
+        file_put_contents($passFile, $newContent);
+        echo "✅ Symfony AddConsoleCommandPass.php disesuaikan.\n";
+    }
+}
+
+// 8. Patch PHPUnit Version.php
+$versionFile = __DIR__ . '/vendor/phpunit/phpunit/src/Runner/Version.php';
+if (file_exists($versionFile)) {
+    $content = file_get_contents($versionFile);
+    $newContent = str_replace(
+        "new VersionId('13.4.2', \$path)->asString()",
+        "(new VersionId('13.4.2', \$path))->asString()",
+        $content
+    );
+    if ($newContent !== $content) {
+        file_put_contents($versionFile, $newContent);
+        echo "✅ PHPUnit Version.php disesuaikan.\n";
+    }
+}
+
 echo "🎉 Selesai! Semua dependensi kini 100% kompatibel dengan PHP 8.3 cPanel.\n";

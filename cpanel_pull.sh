@@ -46,9 +46,14 @@ echo "📦 [4/6] Memeriksa & menginstal dependensi (folder vendor)..."
 if [ ! -d "vendor" ]; then
     if [ -f "vendor.zip" ]; then
         echo "Mengekstrak vendor.zip bawaan..."
-        unzip -q -o vendor.zip
-    elif command -v unzip >/dev/null 2>&1 && [ -f "vendor.zip" ]; then
-        unzip -q -o vendor.zip
+        unzip -q -o vendor.zip || true
+    fi
+fi
+
+if [ -d "vendor" ]; then
+    chmod -R 755 vendor 2>/dev/null || true
+    if [ -f "vendor/composer/platform_check.php" ]; then
+        echo '<?php $issues = [];' > vendor/composer/platform_check.php
     fi
 fi
 

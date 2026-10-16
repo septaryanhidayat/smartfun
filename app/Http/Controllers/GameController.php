@@ -132,7 +132,7 @@ class GameController extends Controller
         $initialRank = GamePlayer::where('game_session_id', $session->id)
             ->where('total_score', '>', $player->total_score)
             ->count() + 1;
-        $initialLeaderboard = $this->gameEngine->getLiveLeaderboard($pin, 5);
+        $initialLeaderboard = $this->gameEngine->getLiveLeaderboard($pin);
         $sessionQuestions = $this->gameEngine->getSessionQuestions($session);
         $totalQuestionsCount = $sessionQuestions->count();
         $isCompleted = ($session->status === 'finished') || ($session->mode !== 'live_host' && $initialQuestion === null && count($answeredQuestionIds) >= $totalQuestionsCount);

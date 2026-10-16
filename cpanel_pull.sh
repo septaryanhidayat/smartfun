@@ -61,6 +61,9 @@ if [ -d "vendor" ]; then
     if [ -f "vendor/pestphp/pest-plugin-laravel/src/Autoload.php" ]; then
         echo '<?php // disabled' > vendor/pestphp/pest-plugin-laravel/src/Autoload.php
     fi
+    if [ -f "patch_php83.php" ]; then
+        $PHP_BIN patch_php83.php
+    fi
 fi
 
 if [ ! -d "vendor" ]; then

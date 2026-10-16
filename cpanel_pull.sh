@@ -58,6 +58,9 @@ if [ -d "vendor" ]; then
     if [ -f "vendor/nunomaduro/collision/src/Adapters/Phpunit/Autoload.php" ]; then
         echo '<?php // disabled' > vendor/nunomaduro/collision/src/Adapters/Phpunit/Autoload.php
     fi
+    if [ -f "vendor/pestphp/pest-plugin-laravel/src/Autoload.php" ]; then
+        echo '<?php // disabled' > vendor/pestphp/pest-plugin-laravel/src/Autoload.php
+    fi
 fi
 
 if [ ! -d "vendor" ]; then

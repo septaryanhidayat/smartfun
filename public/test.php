@@ -44,12 +44,14 @@ if (!file_exists(__DIR__ . '/../vendor/autoload.php')) {
         echo "<p style='color:green;'>✅ Composer Autoload Berhasil Dimuat.</p>";
 
         $app = require_once __DIR__ . '/../bootstrap/app.php';
+        $kernel = $app->make(\Illuminate\Contracts\Console\Kernel::class);
+        $kernel->bootstrap();
         echo "<p style='color:green;'>✅ Bootstrap Laravel Berhasil Diinisialisasi.</p>";
 
         // Test DB connection
         try {
             $pdo = \Illuminate\Support\Facades\DB::connection()->getPdo();
-            echo "<p style='color:green;'>✅ Koneksi Database MySQL Berhasil! (Driver: " . $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME) . ")</p>";
+            echo "<p style='color:green;'>✅ Koneksi Database MySQL Berhasil! (Database: " . \Illuminate\Support\Facades\DB::getDatabaseName() . ")</p>";
         } catch (\Throwable $dbe) {
             echo "<p style='color:red;'>❌ Gagal Koneksi Database: " . htmlspecialchars($dbe->getMessage()) . "</p>";
         }

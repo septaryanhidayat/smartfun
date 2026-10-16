@@ -83,6 +83,16 @@
                 </span>
             </div>
 
+            <!-- Finish & Reveal Podium Button for Host -->
+            <button 
+                type="button" 
+                x-show="sessionStatus === 'active'"
+                @click="if (confirm('Akhiri kuis sekarang dan tampilkan podium kejuaraan?')) finishGameNow()"
+                class="py-2 px-3 sm:px-4 rounded-2xl text-xs font-black btn-3d btn-3d-green flex items-center gap-1.5 shadow-md shadow-emerald-950 cursor-pointer">
+                <span>🏆</span>
+                <span class="hidden sm:inline">Buka Podium</span>
+            </button>
+
             <!-- PIN Badge -->
             <div class="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 px-4 py-1.5 rounded-2xl font-black tracking-widest text-lg sm:text-xl shadow-lg shadow-amber-400/20">
                 PIN: {{ $session->pin }}
@@ -273,12 +283,24 @@
             </template>
         </div>
 
-        <button 
-            type="button" 
-            @click="nextQuestion()"
-            class="w-full py-4 rounded-2xl font-black text-lg btn-3d btn-3d-purple">
-            Lanjut ke Soal Berikutnya →
-        </button>
+        <div class="flex flex-col sm:flex-row items-center gap-3">
+            <template x-if="currentQuestion.questionIndex >= totalQuestions">
+                <button 
+                    type="button" 
+                    @click="finishGameNow()"
+                    class="w-full py-4 rounded-2xl font-black text-lg btn-3d btn-3d-green shadow-xl shadow-emerald-950 cursor-pointer">
+                    🏆 Selesaikan Kuis & Buka Podium Kejuaraan →
+                </button>
+            </template>
+            <template x-if="currentQuestion.questionIndex < totalQuestions">
+                <button 
+                    type="button" 
+                    @click="nextQuestion()"
+                    class="w-full py-4 rounded-2xl font-black text-lg btn-3d btn-3d-purple cursor-pointer">
+                    Lanjut ke Soal Berikutnya →
+                </button>
+            </template>
+        </div>
     </div>
 
     <!-- ========================================== -->
@@ -290,12 +312,22 @@
             <h2 class="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
                 <span>🔥</span> Papan Peringkat Peserta (<span x-text="leaderboard.length"></span> Siswa)
             </h2>
-            <button 
-                type="button" 
-                @click="nextQuestion()"
-                class="py-2.5 px-6 rounded-xl font-black text-sm btn-3d btn-3d-purple">
-                Lanjut ke Soal Berikutnya →
-            </button>
+            <div class="flex items-center gap-2">
+                <button 
+                    type="button" 
+                    @click="finishGameNow()"
+                    class="py-2.5 px-4 rounded-xl font-black text-xs sm:text-sm btn-3d btn-3d-green cursor-pointer">
+                    🏆 Buka Podium Juara
+                </button>
+                <template x-if="currentQuestion.questionIndex < totalQuestions">
+                    <button 
+                        type="button" 
+                        @click="nextQuestion()"
+                        class="py-2.5 px-4 sm:px-6 rounded-xl font-black text-xs sm:text-sm btn-3d btn-3d-purple cursor-pointer">
+                        Soal Berikutnya →
+                    </button>
+                </template>
+            </div>
         </div>
 
         <div class="space-y-2.5 mb-6 max-w-3xl mx-auto w-full max-h-[55vh] overflow-y-auto pr-2 custom-scrollbar">
@@ -336,12 +368,30 @@
             </template>
         </div>
 
-        <button 
-            type="button" 
-            @click="nextQuestion()"
-            class="w-full py-4 rounded-2xl font-black text-lg btn-3d btn-3d-purple">
-            Lanjut ke Soal Berikutnya →
-        </button>
+        <template x-if="currentQuestion.questionIndex >= totalQuestions">
+            <button 
+                type="button" 
+                @click="finishGameNow()"
+                class="w-full py-4 rounded-2xl font-black text-lg btn-3d btn-3d-green shadow-xl shadow-emerald-950 cursor-pointer">
+                🏆 Selesaikan Kuis & Buka Podium Kejuaraan →
+            </button>
+        </template>
+        <template x-if="currentQuestion.questionIndex < totalQuestions">
+            <div class="flex flex-col sm:flex-row items-center gap-3">
+                <button 
+                    type="button" 
+                    @click="nextQuestion()"
+                    class="flex-1 w-full py-4 rounded-2xl font-black text-lg btn-3d btn-3d-purple cursor-pointer">
+                    Lanjut ke Soal Berikutnya →
+                </button>
+                <button 
+                    type="button" 
+                    @click="finishGameNow()"
+                    class="w-full sm:w-auto py-4 px-8 rounded-2xl font-black text-base btn-3d btn-3d-green cursor-pointer">
+                    🏆 Buka Podium Sekarang
+                </button>
+            </div>
+        </template>
     </div>
 
     <!-- ========================================== -->
@@ -684,6 +734,30 @@
                 this.hostStep = 'leaderboard';
             },
 
+            async finishGameNow() {
+                try {
+                    const res = await fetch('/api/host/' + this.pin + '/finish', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        this.sessionStatus = 'finished';
+                        if (data.result && data.result.data) {
+                            this.podium = data.result.data.podium || [];
+                            this.leaderboard = data.result.data.leaderboard || this.leaderboard;
+                        }
+                        this.triggerConfetti();
+                    }
+                } catch (e) {
+                    console.error('Finish game error:', e);
+                }
+            },
+
             async nextQuestion() {
                 try {
                     const res = await fetch('/api/host/' + this.pin + '/next', {
@@ -698,7 +772,10 @@
                     if (data.success) {
                         if (data.result.action === 'game_finished') {
                             this.sessionStatus = 'finished';
-                            this.podium = data.result.data.podium;
+                            if (data.result.data) {
+                                this.podium = data.result.data.podium || [];
+                                this.leaderboard = data.result.data.leaderboard || this.leaderboard;
+                            }
                             this.triggerConfetti();
                         } else {
                             this.hostStep = 'question';
@@ -707,7 +784,7 @@
                         }
                     }
                 } catch (e) {
-                    console.error(e);
+                    console.error('Next question error:', e);
                 }
             },
 
@@ -785,7 +862,7 @@
 
                 if (state.status === 'finished') {
                     this.sessionStatus = 'finished';
-                    // Build podium from leaderboard
+                    this.leaderboard = state.leaderboard || this.leaderboard;
                     this.podium = this.leaderboard.slice(0, 3);
                 }
             }

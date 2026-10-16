@@ -256,6 +256,26 @@ class HostController extends Controller
     }
 
     /**
+     * Host ends game session and reveals podium.
+     */
+    public function finish(string $pin): JsonResponse
+    {
+        try {
+            $result = $this->gameEngine->finishGame($pin);
+
+            return response()->json([
+                'success' => true,
+                'result' => $result,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
      * Export session report to CSV.
      */
     public function export(string $pin): StreamedResponse

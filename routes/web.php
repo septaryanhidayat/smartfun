@@ -47,4 +47,5 @@ Route::prefix('api/host/{pin}')->name('api.host.')->middleware('auth')->group(fu
     Route::post('/start', [HostController::class, 'start'])->name('start');
     Route::post('/next', [HostController::class, 'next'])->name('next');
     Route::post('/end-question', [HostController::class, 'endQuestion'])->name('end_question');
+    Route::post('/finish', [HostController::class, 'finish'])->name('finish');
 });

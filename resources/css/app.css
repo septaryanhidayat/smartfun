@@ -133,3 +133,65 @@
 ::-webkit-scrollbar-thumb:hover {
     background: #6b21a8;
 }
+
+/* ==========================================================
+   DYNAMIC 5-THEME VISUAL ENGINE (Vibrant, Unique, Immersive)
+   ========================================================== */
+
+/* 1. ARCADE NEON (Retro 80s Synthwave) */
+.theme-arcade {
+    background-color: #0d0221 !important;
+    background-image: 
+        radial-gradient(ellipse at 50% 0%, rgba(236, 72, 153, 0.40) 0%, rgba(107, 33, 168, 0.28) 45%, transparent 80%),
+        linear-gradient(to right, rgba(236, 72, 153, 0.09) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(236, 72, 153, 0.09) 1px, transparent 1px) !important;
+    background-size: 100% 100%, 36px 36px, 36px 36px !important;
+}
+
+/* 2. SPACE GALAXY (Deep Cosmic Starfield & Nebula) */
+.theme-space {
+    background-color: #030714 !important;
+    background-image: 
+        radial-gradient(ellipse at 50% 10%, rgba(99, 102, 241, 0.45) 0%, rgba(59, 130, 246, 0.25) 35%, transparent 75%),
+        radial-gradient(circle at 85% 20%, rgba(168, 85, 247, 0.3) 0%, transparent 40%),
+        radial-gradient(circle at 15% 80%, rgba(56, 189, 248, 0.25) 0%, transparent 40%),
+        radial-gradient(2px 2px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 60px 90px, #93c5fd, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 120px 50px, #ffffff, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 180px 140px, #c084fc, rgba(0,0,0,0)) !important;
+    background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat, repeat, repeat !important;
+    background-size: 100% 100%, 100% 100%, 100% 100%, 260px 260px, 200px 200px, 150px 150px, 320px 320px !important;
+}
+
+/* 3. FANTASY QUEST (Mystical Enchanted Crystal Forest) */
+.theme-fantasy {
+    background-color: #021a11 !important;
+    background-image: 
+        radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.45) 0%, rgba(13, 148, 136, 0.30) 45%, transparent 80%),
+        radial-gradient(circle at 15% 30%, rgba(52, 211, 153, 0.25) 0%, transparent 50%),
+        radial-gradient(circle at 85% 70%, rgba(245, 158, 11, 0.20) 0%, transparent 45%),
+        radial-gradient(2px 2px at 45px 30px, #a7f3d0, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 130px 80px, #fde68a, rgba(0,0,0,0)) !important;
+    background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat !important;
+    background-size: 100% 100%, 100% 100%, 100% 100%, 180px 180px, 240px 240px !important;
+}
+
+/* 4. CYBERPUNK 2099 (High-Octane Neon Digital Matrix) */
+.theme-cyberpunk {
+    background-color: #030a16 !important;
+    background-image: 
+        radial-gradient(ellipse at 50% 0%, rgba(6, 182, 212, 0.45) 0%, rgba(37, 99, 235, 0.30) 50%, transparent 80%),
+        linear-gradient(to right, rgba(6, 182, 212, 0.12) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(6, 182, 212, 0.12) 1px, transparent 1px) !important;
+    background-size: 100% 100%, 30px 30px, 30px 30px !important;
+}
+
+/* 5. LAVA SHOWDOWN (Infernal Magma Volcanic Battle) */
+.theme-lava {
+    background-color: #1a0303 !important;
+    background-image: 
+        radial-gradient(ellipse at 50% 0%, rgba(239, 68, 68, 0.50) 0%, rgba(245, 158, 11, 0.35) 45%, transparent 80%),
+        radial-gradient(circle at 20% 90%, rgba(220, 38, 38, 0.35) 0%, transparent 50%),
+        radial-gradient(circle at 80% 85%, rgba(249, 115, 22, 0.30) 0%, transparent 50%) !important;
+}
+

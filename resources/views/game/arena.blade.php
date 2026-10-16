@@ -9,7 +9,7 @@
     <div class="fixed inset-0 pointer-events-none transition-all duration-1000 -z-10" :class="getThemeAmbianceClass()"></div>
 
     <!-- Top Status Bar (HUD) -->
-    <div class="w-full bg-[#1e0a3c]/90 rounded-2xl border border-purple-800/60 p-3 sm:p-4 backdrop-blur-md shadow-lg flex items-center justify-between gap-2 mb-4">
+    <div :class="getThemeHudClass()" class="w-full rounded-2xl border p-3 sm:p-4 backdrop-blur-md shadow-lg flex items-center justify-between gap-2 mb-4 transition-colors duration-500">
         <!-- Player Info -->
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-900/80 border border-purple-700/60 flex items-center justify-center text-2xl sm:text-3xl shadow">
@@ -51,7 +51,7 @@
     </div>
 
     <!-- Power-Ups Bar (Quizizz Style) -->
-    <div class="w-full bg-[#180630]/80 rounded-2xl border border-purple-900/60 p-2.5 mb-4 flex items-center justify-between gap-2 overflow-x-auto">
+    <div :class="getThemeHudClass()" class="w-full rounded-2xl border p-2.5 mb-4 flex items-center justify-between gap-2 overflow-x-auto transition-colors duration-500">
         <span class="text-[11px] font-black uppercase tracking-wider text-purple-300 flex items-center gap-1.5 shrink-0">
             <span>⚡</span> Power-Ups:
         </span>
@@ -126,21 +126,90 @@
     <!-- ========================================== -->
     <!-- VIEW 1: LOBBY STATE                       -->
     <!-- ========================================== -->
-    <div x-show="sessionStatus === 'lobby'" class="flex-1 flex flex-col items-center justify-center text-center py-10">
-        <div class="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-gradient-to-tr from-purple-700 via-rose-600 to-amber-500 p-1 flex items-center justify-center shadow-2xl shadow-purple-900/80 mb-6 animate-pulse-glow">
-            <div class="w-full h-full bg-[#180630] rounded-[22px] flex items-center justify-center text-6xl sm:text-7xl">
+    <div x-show="sessionStatus === 'lobby'" class="flex-1 flex flex-col items-center justify-center text-center py-6 sm:py-10">
+        <!-- Player Avatar & Ready Banner -->
+        <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-gradient-to-tr from-purple-700 via-rose-600 to-amber-500 p-1 flex items-center justify-center shadow-2xl shadow-purple-900/80 mb-4 animate-pulse-glow">
+            <div class="w-full h-full bg-[#180630] rounded-[22px] flex items-center justify-center text-5xl sm:text-6xl">
                 <span x-text="player.avatarEmoji"></span>
             </div>
         </div>
 
-        <h2 class="text-2xl sm:text-4xl font-black text-white mb-2">Kamu Sudah Terhubung!</h2>
-        <p class="text-sm sm:text-base text-purple-300 max-w-md mx-auto mb-6">
-            Lihat namamu di layar depan. Bersiaplah, guru akan segera memulai permainan!
+        <h2 class="text-2xl sm:text-4xl font-black text-white mb-1.5">Kamu Sudah Terhubung!</h2>
+        <p class="text-xs sm:text-sm text-purple-300 max-w-md mx-auto mb-5">
+            Lihat namamu di layar depan. Bersiaplah, guru akan segera memulai kuis!
         </p>
 
-        <div class="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-purple-950/80 border border-purple-700/60 text-purple-300 text-xs font-bold">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-            <span x-text="connectedPlayersCount + ' Pemain Bersiap di Lobi'"></span>
+        <!-- Funny Lobby Music & Status Pill -->
+        <div class="mb-6 flex flex-wrap items-center justify-center gap-3">
+            <button 
+                type="button" 
+                @click="toggleLobbyAudio()" 
+                class="px-5 py-2.5 rounded-2xl border text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer shadow-lg hover:scale-105 active:scale-95"
+                :class="isLobbyMusicPlaying ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-300/50 shadow-amber-400/20' : 'bg-purple-900/70 text-purple-200 border-purple-700 hover:bg-purple-800'">
+                <span x-text="isLobbyMusicPlaying ? '🎷 Hentikan Musik Lucu' : '🎷 Putar Musik Lucu Ruang Tunggu'"></span>
+            </button>
+            <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-purple-950/80 border border-purple-700/60 text-purple-300 text-xs font-bold">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span x-text="(lobbyPlayers.length || connectedPlayersCount) + ' Pemain Bersiap di Lobi'"></span>
+            </div>
+        </div>
+
+        <!-- Adaptive Classmates Lobby Roster (Unlimited & Self-Scaling) -->
+        <div :class="getThemeCardClass()" class="w-full rounded-3xl border p-4 sm:p-6 shadow-2xl backdrop-blur-md text-left transition-colors duration-500 max-w-3xl">
+            <div class="flex items-center justify-between mb-4 pb-2 border-b border-purple-900/60">
+                <h3 class="text-xs sm:text-sm font-black text-white flex items-center gap-2">
+                    <span>👥</span> Teman Sekelas di Ruang Tunggu (<span x-text="lobbyPlayers.length || connectedPlayersCount"></span>)
+                </h3>
+                <span class="text-[11px] text-purple-400 font-bold" x-text="lobbyPlayers.length > 35 ? 'Mode Padat' : (lobbyPlayers.length > 15 ? 'Mode Kompak' : 'Mode Standar')"></span>
+            </div>
+
+            <!-- Empty State -->
+            <div x-show="!lobbyPlayers || lobbyPlayers.length === 0" class="py-6 text-center text-purple-400 text-xs">
+                Menunggu teman-teman lain bergabung...
+            </div>
+
+            <!-- Roster Container: Responsive / Adaptive Densities for Unlimited Players -->
+            <div 
+                x-show="lobbyPlayers && lobbyPlayers.length > 0"
+                class="flex flex-wrap gap-2 sm:gap-3 max-h-72 overflow-y-auto pr-1 custom-scrollbar justify-center items-center">
+                
+                <template x-for="p in lobbyPlayers" :key="p.id">
+                    <div 
+                        :class="{
+                            /* Highlight own badge */
+                            'ring-2 ring-amber-400 bg-amber-500/25 border-amber-400 shadow-amber-400/20 scale-105': p.id === player.id,
+                            'bg-purple-950/60 border-purple-800/60': p.id !== player.id,
+                            /* Density 1: <= 15 players (Large comfortable card) */
+                            'px-4 py-3 rounded-2xl flex-col text-center min-w-[105px]': (lobbyPlayers.length <= 15),
+                            /* Density 2: 16 - 35 players (Compact horizontal pill) */
+                            'px-3 py-1.5 rounded-xl flex-row items-center gap-2': (lobbyPlayers.length > 15 && lobbyPlayers.length <= 35),
+                            /* Density 3: > 35 players (Micro chip for massive crowds) */
+                            'px-2.5 py-1 rounded-lg flex-row items-center gap-1.5 text-xs': (lobbyPlayers.length > 35)
+                        }"
+                        class="border shadow-md flex items-center transition-all animate-pop-in">
+                        
+                        <span 
+                            :class="{
+                                'text-2xl mb-1': (lobbyPlayers.length <= 15),
+                                'text-lg': (lobbyPlayers.length > 15 && lobbyPlayers.length <= 35),
+                                'text-base': (lobbyPlayers.length > 35)
+                            }" 
+                            x-text="getAvatarEmoji(p.avatar)"></span>
+                        
+                        <div class="flex items-center gap-1 truncate max-w-[130px]">
+                            <span 
+                                :class="{
+                                    'text-xs font-black text-white': (lobbyPlayers.length <= 15),
+                                    'text-xs font-bold text-white': (lobbyPlayers.length > 15 && lobbyPlayers.length <= 35),
+                                    'text-[11px] font-bold text-purple-100': (lobbyPlayers.length > 35)
+                                }" 
+                                class="truncate" 
+                                x-text="p.nickname"></span>
+                            <span x-show="p.id === player.id" class="px-1.5 py-0.2 rounded text-[9px] font-black bg-amber-400 text-slate-950 shrink-0">Kamu</span>
+                        </div>
+                    </div>
+                </template>
+            </div>
         </div>
     </div>
 
@@ -169,7 +238,7 @@
         </div>
 
         <!-- Question Card -->
-        <div class="bg-[#1c083b]/90 rounded-3xl border border-purple-700/50 p-5 sm:p-7 shadow-xl mb-6 backdrop-blur-md">
+        <div :class="getThemeCardClass()" class="rounded-3xl border p-5 sm:p-7 shadow-xl mb-6 backdrop-blur-md transition-colors duration-500">
             <template x-if="currentQuestion.media">
                 <div class="w-full max-h-52 overflow-hidden rounded-2xl mb-4 border border-purple-900/60">
                     <img :src="currentQuestion.media" alt="Media Soal" class="w-full h-full object-cover">
@@ -272,7 +341,7 @@
             </template>
 
             <!-- KLASEMEN SEMENTARA (LIVE STANDINGS) CARD -->
-            <div class="bg-[#180630]/95 rounded-3xl border border-purple-800/80 p-5 shadow-2xl backdrop-blur-md">
+            <div :class="getThemeCardClass()" class="rounded-3xl border p-5 shadow-2xl backdrop-blur-md transition-colors duration-500">
                 <div class="flex items-center justify-between pb-3 border-b border-purple-900/70 mb-3">
                     <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-purple-300 flex items-center gap-2">
                         <span>🏆</span> Klasemen Sementara
@@ -495,7 +564,7 @@
         </template>
 
         <!-- Personal Player Stats Card -->
-        <div class="w-full max-w-sm bg-[#1c083b]/90 border border-purple-700/60 p-5 rounded-3xl shadow-xl backdrop-blur-md mb-6">
+        <div :class="getThemeCardClass()" class="w-full max-w-sm border p-5 rounded-3xl shadow-xl backdrop-blur-md mb-6 transition-colors duration-500">
             <div class="grid grid-cols-2 gap-4 text-center">
                 <div class="p-3.5 rounded-2xl bg-purple-950/70 border border-purple-800">
                     <span class="text-[10px] uppercase font-bold text-purple-400 block mb-1">Peringkat Akhir</span>
@@ -509,7 +578,7 @@
         </div>
 
         <!-- Full Class Standings on Finished Screen -->
-        <div class="w-full max-w-md bg-[#180630]/90 border border-purple-800/80 rounded-3xl p-5 mb-6 text-left shadow-2xl backdrop-blur-md">
+        <div :class="getThemeCardClass()" class="w-full max-w-md border rounded-3xl p-5 mb-6 text-left shadow-2xl backdrop-blur-md transition-colors duration-500">
             <div class="flex items-center justify-between mb-4 pb-2 border-b border-purple-900/60">
                 <h3 class="text-sm font-black text-white flex items-center gap-2">
                     <span>🏆</span> Peringkat Lengkap Seluruh Peserta (<span x-text="leaderboard.length"></span>)
@@ -573,16 +642,44 @@
             bgmConfigEnabled: {{ ($session->settings["bgm"] ?? true) ? 'true' : 'false' }},
             currentStep: 'active', // 'active', 'waiting', 'feedback'
             connectedPlayersCount: {{ $session->players->count() }},
+            lobbyPlayers: @json($session->players->map(fn ($p) => ['id' => $p->id, 'nickname' => $p->nickname, 'avatar' => $p->avatar_url])->values()),
+            isLobbyMusicPlaying: false,
+
+            getThemeCardClass() {
+                const map = {
+                    arcade: 'bg-[#180630]/90 border-pink-500/40 shadow-xl shadow-pink-950/30 text-white backdrop-blur-md',
+                    space: 'bg-[#080d26]/90 border-indigo-500/50 shadow-xl shadow-indigo-950/40 text-white backdrop-blur-md',
+                    fantasy: 'bg-[#042017]/90 border-emerald-500/50 shadow-xl shadow-emerald-950/40 text-white backdrop-blur-md',
+                    cyberpunk: 'bg-[#051524]/90 border-cyan-400/50 shadow-xl shadow-cyan-950/40 text-white backdrop-blur-md',
+                    lava: 'bg-[#220707]/90 border-rose-500/50 shadow-xl shadow-rose-950/40 text-white backdrop-blur-md'
+                };
+                return map[this.currentTheme] || map.arcade;
+            },
+
+            getThemeHudClass() {
+                const map = {
+                    arcade: 'bg-[#1e0a3c]/90 border-pink-500/40 shadow-lg shadow-pink-950/30 backdrop-blur-md',
+                    space: 'bg-[#0c1236]/90 border-indigo-500/50 shadow-lg shadow-indigo-950/40 backdrop-blur-md',
+                    fantasy: 'bg-[#06291e]/90 border-emerald-500/50 shadow-lg shadow-emerald-950/40 backdrop-blur-md',
+                    cyberpunk: 'bg-[#071d33]/90 border-cyan-400/50 shadow-lg shadow-cyan-950/40 backdrop-blur-md',
+                    lava: 'bg-[#2d0909]/90 border-rose-500/50 shadow-lg shadow-rose-950/40 backdrop-blur-md'
+                };
+                return map[this.currentTheme] || map.arcade;
+            },
 
             getThemeAmbianceClass() {
-                const ambiance = {
-                    arcade: 'bg-[radial-gradient(ellipse_at_top,_rgba(236,72,153,0.18),_rgba(107,33,168,0.14),_transparent_70%)]',
-                    space: 'bg-[radial-gradient(ellipse_at_top,_rgba(99,102,241,0.22),_rgba(88,28,135,0.14),_transparent_70%)]',
-                    fantasy: 'bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.18),_rgba(13,148,136,0.14),_transparent_70%)]',
-                    cyberpunk: 'bg-[radial-gradient(ellipse_at_top,_rgba(6,182,212,0.18),_rgba(37,99,235,0.14),_transparent_70%)]',
-                    lava: 'bg-[radial-gradient(ellipse_at_top,_rgba(244,63,94,0.22),_rgba(245,158,11,0.15),_transparent_70%)]'
-                };
-                return ambiance[this.currentTheme] || ambiance.arcade;
+                return 'theme-' + this.currentTheme;
+            },
+
+            toggleLobbyAudio() {
+                if (!window.SmartFunAudio) return;
+                if (this.isLobbyMusicPlaying) {
+                    window.SmartFunAudio.stopLobbyMusic();
+                    this.isLobbyMusicPlaying = false;
+                } else {
+                    window.SmartFunAudio.startLobbyMusic();
+                    this.isLobbyMusicPlaying = true;
+                }
             },
 
             toggleBgm() {
@@ -590,8 +687,13 @@
                 if (this.isBgmPlaying) {
                     window.SmartFunAudio.stopBgm();
                     this.isBgmPlaying = false;
+                    this.isLobbyMusicPlaying = false;
                 } else {
-                    window.SmartFunAudio.startBgm(this.currentTheme);
+                    if (this.sessionStatus === 'lobby' && this.isLobbyMusicPlaying) {
+                        window.SmartFunAudio.startLobbyMusic();
+                    } else {
+                        window.SmartFunAudio.startBgm(this.currentTheme);
+                    }
                     this.isBgmPlaying = true;
                 }
             },
@@ -641,6 +743,13 @@
             init() {
                 this.resolveAvatarEmoji();
                 this.podium = (this.leaderboard || []).slice(0, 3);
+
+                // Dynamically sync theme to document body
+                this.$watch('currentTheme', (theme) => {
+                    document.body.classList.remove('theme-arcade', 'theme-space', 'theme-fantasy', 'theme-cyberpunk', 'theme-lava');
+                    document.body.classList.add('theme-' + theme);
+                });
+                document.body.classList.add('theme-' + this.currentTheme);
 
                 // If all questions already finished for this player
                 if ({{ $isCompleted ? 'true' : 'false' }}) {
@@ -982,6 +1091,22 @@
             handleStateUpdate(state) {
                 if (!state || state.error) return;
 
+                if (state.players) {
+                    this.lobbyPlayers = state.players;
+                    this.connectedPlayersCount = state.players.length;
+                }
+
+                if (state.status === 'active' && this.sessionStatus !== 'active') {
+                    if (this.isLobbyMusicPlaying && window.SmartFunAudio) {
+                        window.SmartFunAudio.stopLobbyMusic();
+                        this.isLobbyMusicPlaying = false;
+                        if (this.bgmConfigEnabled) {
+                            window.SmartFunAudio.startBgm(this.currentTheme);
+                            this.isBgmPlaying = true;
+                        }
+                    }
+                }
+
                 if (!this.isPlayerFinished) {
                     this.sessionStatus = state.status;
                 }
@@ -990,6 +1115,8 @@
 
                 if (state.theme && state.theme !== this.currentTheme) {
                     this.currentTheme = state.theme;
+                    document.body.classList.remove('theme-arcade', 'theme-space', 'theme-fantasy', 'theme-cyberpunk', 'theme-lava');
+                    document.body.classList.add('theme-' + state.theme);
                     if (this.isBgmPlaying && window.SmartFunAudio) {
                         window.SmartFunAudio.setTheme(state.theme);
                     }

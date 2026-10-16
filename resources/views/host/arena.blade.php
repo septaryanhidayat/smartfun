@@ -6,10 +6,10 @@
     x-data="hostArenaComponent()">
 
     <!-- Ambient Theme Backdrop -->
-    <div class="fixed inset-0 pointer-events-none transition-all duration-1000 -z-10" :class="getThemeAmbianceClass()"></div>
+    <div class="fixed inset-0 pointer-events-none transition-all duration-700 -z-10" :class="getThemeAmbianceClass()"></div>
 
     <!-- Host HUD Bar -->
-    <div class="w-full bg-[#1c083b]/90 rounded-3xl border border-purple-800/60 p-4 sm:p-5 backdrop-blur-md shadow-2xl flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div :class="getThemeHudClass()" class="w-full rounded-3xl border p-4 sm:p-5 shadow-2xl flex flex-wrap items-center justify-between gap-4 mb-6 transition-all duration-500">
         <div class="flex items-center gap-3">
             <span class="px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider" :class="getModeBadgeClass()">
                 <span x-text="getModeLabel()"></span>
@@ -107,7 +107,7 @@
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center mb-8">
             <!-- Left: QR Code & Join Instructions -->
-            <div class="bg-[#180630]/90 rounded-3xl border border-purple-800/60 p-6 sm:p-8 flex flex-col items-center text-center shadow-xl backdrop-blur-md">
+            <div :class="getThemeCardClass()" class="rounded-3xl border p-6 sm:p-8 flex flex-col items-center text-center shadow-xl transition-all duration-500">
                 <span class="text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Scan untuk Bergabung</span>
                 
                 <!-- QR Code Canvas -->
@@ -143,21 +143,68 @@
             </div>
         </div>
 
-        <!-- Connected Players Roster Grid -->
-        <div class="bg-[#180630]/70 rounded-3xl border border-purple-800/50 p-6">
-            <h3 class="text-sm font-extrabold uppercase tracking-wider text-purple-300 mb-4 flex items-center justify-between">
-                <span>Pemain Bergabung (<span x-text="players.length"></span>)</span>
-                <span class="text-xs text-purple-400 font-normal">Nama akan melayang masuk otomatis</span>
-            </h3>
+        <!-- Connected Players Roster Grid with Dynamic Adaptive Sizing -->
+        <div :class="getThemeCardClass()" class="rounded-3xl border p-6 shadow-2xl transition-all duration-500">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div class="flex items-center gap-3">
+                    <span class="w-3.5 h-3.5 rounded-full bg-emerald-400 animate-ping"></span>
+                    <h3 class="text-sm sm:text-base font-black uppercase tracking-wider text-white">
+                        Pemain Bergabung: <span class="text-amber-400" x-text="players.length"></span> Siswa
+                    </h3>
+                </div>
 
-            <div class="flex flex-wrap gap-3 max-h-56 overflow-y-auto p-2">
-                <template x-for="p in players" :key="p.id">
-                    <div class="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-purple-950/90 border border-purple-700/60 shadow animate-pop-in">
-                        <span class="text-2xl" x-text="getAvatarEmoji(p.avatar)"></span>
-                        <span class="font-extrabold text-sm text-white" x-text="p.nickname"></span>
-                    </div>
-                </template>
+                <div class="flex items-center gap-2">
+                    <!-- Fun Lobby Music Toggle Button -->
+                    <button 
+                        type="button" 
+                        @click="toggleLobbyMusic()"
+                        class="px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 border shadow-md cursor-pointer"
+                        :class="isLobbyMusicPlaying ? 'bg-amber-400 text-slate-950 border-amber-300 animate-pulse' : 'bg-purple-900/60 hover:bg-purple-800 text-purple-200 border-purple-700'">
+                        <span>🎷</span>
+                        <span x-text="isLobbyMusicPlaying ? 'Jeda Musik Lucu' : 'Putar Musik Lucu Ruang Tunggu'"></span>
+                    </button>
+                    <span class="text-xs text-purple-400 hidden sm:inline">Nama & avatar otomatis muncul saat bergabung</span>
+                </div>
             </div>
+
+            <!-- Empty State -->
+            <template x-if="players.length === 0">
+                <div class="py-12 text-center flex flex-col items-center justify-center">
+                    <div class="w-16 h-16 rounded-2xl bg-purple-900/40 border border-purple-800 flex items-center justify-center text-3xl mb-3 animate-bounce">
+                        👋
+                    </div>
+                    <p class="text-sm font-bold text-purple-300 mb-1">Belum ada siswa yang masuk ke arena</p>
+                    <p class="text-xs text-purple-400">Ajak siswa scan QR Code di samping atau ketik PIN <strong class="text-amber-400 font-mono text-sm">{{ $session->pin }}</strong> di HP masing-masing.</p>
+                </div>
+            </template>
+
+            <!-- Adaptive Roster Grid (Auto-scales based on participant count) -->
+            <template x-if="players.length > 0">
+                <div 
+                    class="flex flex-wrap gap-2.5 sm:gap-3 max-h-[380px] overflow-y-auto p-2 custom-scrollbar transition-all"
+                    :class="{
+                        'items-center justify-center': players.length <= 10
+                    }">
+                    <template x-for="p in players" :key="p.id">
+                        <div 
+                            :class="{
+                                'px-4 py-2.5 text-sm': players.length <= 15,
+                                'px-3 py-1.5 text-xs': players.length > 15 && players.length <= 35,
+                                'px-2.5 py-1 text-[11px]': players.length > 35
+                            }"
+                            class="flex items-center gap-2 rounded-2xl bg-black/40 border border-white/10 hover:border-amber-400/60 shadow-lg animate-pop-in transition-transform hover:scale-105">
+                            <span 
+                                :class="{
+                                    'text-2xl sm:text-3xl': players.length <= 15,
+                                    'text-xl': players.length > 15 && players.length <= 35,
+                                    'text-base': players.length > 35
+                                }"
+                                x-text="getAvatarEmoji(p.avatar)"></span>
+                            <span class="font-extrabold text-white truncate max-w-[150px]" x-text="p.nickname"></span>
+                        </div>
+                    </template>
+                </div>
+            </template>
         </div>
 
     </div>
@@ -185,9 +232,9 @@
         </div>
 
         <!-- Big Question Card -->
-        <div class="bg-[#1c083b]/90 rounded-3xl border border-purple-700/50 p-6 sm:p-10 shadow-2xl text-center mb-6 backdrop-blur-md">
+        <div :class="getThemeCardClass()" class="rounded-3xl border p-6 sm:p-10 shadow-2xl text-center mb-6 transition-all duration-500">
             <template x-if="currentQuestion.media">
-                <div class="max-w-md mx-auto max-h-64 overflow-hidden rounded-2xl mb-6 border border-purple-900/60 shadow-lg">
+                <div class="max-w-md mx-auto max-h-64 overflow-hidden rounded-2xl mb-6 border border-white/15 shadow-lg">
                     <img :src="currentQuestion.media" alt="Media Soal" class="w-full h-full object-cover">
                 </div>
             </template>
@@ -195,7 +242,7 @@
         </div>
 
         <!-- Live Answer Progress Bar -->
-        <div class="w-full bg-[#180630]/90 rounded-2xl border border-purple-800/60 p-4 mb-6 flex items-center justify-between gap-4">
+        <div :class="getThemeHudClass()" class="w-full rounded-2xl border p-4 mb-6 flex items-center justify-between gap-4 transition-all duration-500">
             <div class="flex items-center gap-3 flex-1">
                 <span class="text-2xl">⚡</span>
                 <div class="flex-1">
@@ -236,38 +283,47 @@
     <!-- ========================================== -->
     <div x-show="sessionStatus === 'active' && hostStep === 'result'" class="flex-1 flex flex-col justify-between py-4 animate-pop-in">
         
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-2xl font-black text-white">Distribusi Jawaban Siswa</h2>
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <div>
+                <h2 class="text-2xl font-black text-white">Distribusi Jawaban Siswa</h2>
+                <p class="text-xs text-purple-300">
+                    Total respon terkumpul: <strong class="text-amber-300" x-text="getTotalQuestionVotes() + ' siswa'"></strong>
+                </p>
+            </div>
             <button 
                 type="button" 
                 @click="showLeaderboardScreen()"
-                class="py-2.5 px-6 rounded-xl font-black text-sm btn-3d btn-3d-purple">
+                class="py-2.5 px-6 rounded-xl font-black text-sm btn-3d btn-3d-purple cursor-pointer shadow-lg">
                 Papan Peringkat Sementara →
             </button>
         </div>
 
         <!-- Bar Chart Distribution -->
-        <div class="bg-[#180630]/90 rounded-3xl border border-purple-800/60 p-6 sm:p-8 mb-6 shadow-2xl backdrop-blur-md">
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 items-end h-64 pb-4 border-b border-purple-900/60">
+        <div :class="getThemeCardClass()" class="rounded-3xl border p-6 sm:p-8 mb-6 shadow-2xl backdrop-blur-md">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 items-end h-64 pb-4 border-b border-white/10">
                 <template x-for="(opt, idx) in currentQuestion.options" :key="opt.id">
                     <div class="flex flex-col items-center h-full justify-end gap-2">
-                        <!-- Vote Count -->
-                        <span class="text-lg font-black text-white" x-text="getOptionVotes(opt.id)"></span>
+                        <!-- Vote Count and Percentage -->
+                        <div class="text-center">
+                            <span class="text-xl sm:text-2xl font-black text-white block" x-text="getOptionVotes(opt.id) + ' Siswa'"></span>
+                            <span class="text-[11px] font-bold text-amber-300 block" x-text="getOptionVotePercent(opt.id) + '%'"></span>
+                        </div>
 
                         <!-- Column Bar -->
                         <div 
                             :class="[
                                 getOptionColorClass(idx),
-                                (questionResult && questionResult.correctOptionId === opt.id) ? 'ring-4 ring-amber-400 shadow-xl shadow-amber-400/40' : 'opacity-80'
+                                (questionResult && (questionResult.correctOptionId === opt.id || questionResult.correct_option_id === opt.id)) ? 'ring-4 ring-amber-400 shadow-2xl shadow-amber-400/60 scale-105' : 'opacity-85'
                             ]"
-                            class="w-full rounded-2xl transition-all duration-700 min-h-[30px]"
-                            :style="'height: ' + getVoteHeightPercent(opt.id) + '%'"></div>
+                            class="w-full rounded-2xl transition-all duration-700 min-h-[40px] flex items-center justify-center font-black text-white text-sm"
+                            :style="'height: ' + getVoteHeightPercent(opt.id) + '%'">
+                        </div>
 
                         <!-- Option Title -->
-                        <div class="text-center">
-                            <span class="text-xs font-black block" x-text="['▲ Merah', '◆ Biru', '● Kuning', '◼ Hijau'][idx]"></span>
-                            <template x-if="questionResult && questionResult.correctOptionId === opt.id">
-                                <span class="text-[10px] font-black text-amber-300 block">✓ BENAR</span>
+                        <div class="text-center w-full px-1">
+                            <span class="text-xs font-black block truncate" x-text="['▲ ' + opt.text, '◆ ' + opt.text, '● ' + opt.text, '◼ ' + opt.text][idx] || opt.text"></span>
+                            <template x-if="questionResult && (questionResult.correctOptionId === opt.id || questionResult.correct_option_id === opt.id)">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-slate-950 inline-block mt-1 shadow">✓ JAWABAN BENAR</span>
                             </template>
                         </div>
                     </div>
@@ -276,7 +332,7 @@
 
             <!-- Explanation Card -->
             <template x-if="questionResult && questionResult.explanation">
-                <div class="mt-4 p-4 rounded-2xl bg-purple-950/60 border border-purple-800 text-purple-200 text-sm">
+                <div class="mt-4 p-4 rounded-2xl bg-black/40 border border-white/10 text-purple-200 text-sm">
                     <strong class="text-amber-300">💡 Penjelasan Jawaban:</strong>
                     <span x-text="questionResult.explanation"></span>
                 </div>
@@ -561,6 +617,13 @@
                 this.connectRealtime();
                 this.pollState();
 
+                // Dynamically sync theme to document body
+                this.$watch('currentTheme', (theme) => {
+                    document.body.classList.remove('theme-arcade', 'theme-space', 'theme-fantasy', 'theme-cyberpunk', 'theme-lava');
+                    document.body.classList.add('theme-' + theme);
+                });
+                document.body.classList.add('theme-' + this.currentTheme);
+
                 // If BGM is enabled and audio engine is ready, allow click to start
                 if (this.bgmConfigEnabled && window.SmartFunAudio) {
                     window.SmartFunAudio.setTheme(this.currentTheme);
@@ -593,21 +656,74 @@
                 return names[theme] || 'Arcade Neon';
             },
 
-            getThemeAmbianceClass() {
-                const ambiance = {
-                    arcade: 'bg-[radial-gradient(ellipse_at_top,_rgba(236,72,153,0.22),_rgba(107,33,168,0.18),_transparent_70%)]',
-                    space: 'bg-[radial-gradient(ellipse_at_top,_rgba(99,102,241,0.28),_rgba(88,28,135,0.18),_transparent_70%)]',
-                    fantasy: 'bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.22),_rgba(13,148,136,0.18),_transparent_70%)]',
-                    cyberpunk: 'bg-[radial-gradient(ellipse_at_top,_rgba(6,182,212,0.22),_rgba(37,99,235,0.18),_transparent_70%)]',
-                    lava: 'bg-[radial-gradient(ellipse_at_top,_rgba(244,63,94,0.28),_rgba(245,158,11,0.20),_transparent_70%)]'
+            getThemeCardClass() {
+                const map = {
+                    arcade: 'bg-[#180630]/90 border-pink-500/40 shadow-xl shadow-pink-950/30 text-white backdrop-blur-md',
+                    space: 'bg-[#080d26]/90 border-indigo-500/50 shadow-xl shadow-indigo-950/40 text-white backdrop-blur-md',
+                    fantasy: 'bg-[#042017]/90 border-emerald-500/50 shadow-xl shadow-emerald-950/40 text-white backdrop-blur-md',
+                    cyberpunk: 'bg-[#051524]/90 border-cyan-400/50 shadow-xl shadow-cyan-950/40 text-white backdrop-blur-md',
+                    lava: 'bg-[#220707]/90 border-rose-500/50 shadow-xl shadow-rose-950/40 text-white backdrop-blur-md'
                 };
-                return ambiance[this.currentTheme] || ambiance.arcade;
+                return map[this.currentTheme] || map.arcade;
             },
 
-            switchTheme(newTheme) {
+            getThemeHudClass() {
+                const map = {
+                    arcade: 'bg-[#1e0a3c]/90 border-pink-500/40 shadow-lg shadow-pink-950/30 backdrop-blur-md',
+                    space: 'bg-[#0c1236]/90 border-indigo-500/50 shadow-lg shadow-indigo-950/40 backdrop-blur-md',
+                    fantasy: 'bg-[#06291e]/90 border-emerald-500/50 shadow-lg shadow-emerald-950/40 backdrop-blur-md',
+                    cyberpunk: 'bg-[#071d33]/90 border-cyan-400/50 shadow-lg shadow-cyan-950/40 backdrop-blur-md',
+                    lava: 'bg-[#2d0909]/90 border-rose-500/50 shadow-lg shadow-rose-950/40 backdrop-blur-md'
+                };
+                return map[this.currentTheme] || map.arcade;
+            },
+
+            getThemeAmbianceClass() {
+                return 'theme-' + this.currentTheme;
+            },
+
+            async switchTheme(newTheme) {
                 this.currentTheme = newTheme;
+                document.body.classList.remove('theme-arcade', 'theme-space', 'theme-fantasy', 'theme-cyberpunk', 'theme-lava');
+                document.body.classList.add('theme-' + newTheme);
+
                 if (window.SmartFunAudio) {
-                    window.SmartFunAudio.setTheme(newTheme);
+                    if (this.sessionStatus === 'lobby' && this.isLobbyMusicPlaying) {
+                        window.SmartFunAudio.setTheme('lobby');
+                    } else {
+                        window.SmartFunAudio.setTheme(newTheme);
+                    }
+                }
+
+                // Sync live theme to database session so all student devices update
+                try {
+                    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                    const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '{{ csrf_token() }}';
+                    await fetch('/api/host/' + this.pin + '/theme', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ theme: newTheme })
+                    });
+                } catch (e) {
+                    console.error('Failed to sync theme with backend:', e);
+                }
+            },
+
+            isLobbyMusicPlaying: false,
+
+            toggleLobbyMusic() {
+                if (!window.SmartFunAudio) return;
+                if (this.isLobbyMusicPlaying) {
+                    window.SmartFunAudio.stopBgm();
+                    this.isLobbyMusicPlaying = false;
+                } else {
+                    window.SmartFunAudio.startBgm('lobby');
+                    this.isLobbyMusicPlaying = true;
+                    this.isBgmPlaying = true;
                 }
             },
 
@@ -616,8 +732,10 @@
                 if (this.isBgmPlaying) {
                     window.SmartFunAudio.stopBgm();
                     this.isBgmPlaying = false;
+                    this.isLobbyMusicPlaying = false;
                 } else {
-                    window.SmartFunAudio.startBgm(this.currentTheme);
+                    const themeToPlay = (this.sessionStatus === 'lobby' && this.isLobbyMusicPlaying) ? 'lobby' : this.currentTheme;
+                    window.SmartFunAudio.startBgm(themeToPlay);
                     this.isBgmPlaying = true;
                 }
             },
@@ -665,12 +783,18 @@
 
             async startGame() {
                 this.isStarting = true;
+                if (this.isLobbyMusicPlaying && window.SmartFunAudio) {
+                    window.SmartFunAudio.setTheme(this.currentTheme);
+                    this.isLobbyMusicPlaying = false;
+                }
                 try {
+                    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                    const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '{{ csrf_token() }}';
                     const res = await fetch('/api/host/' + this.pin + '/start', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-CSRF-TOKEN': csrfToken,
                             'Accept': 'application/json'
                         }
                     });
@@ -711,13 +835,18 @@
             async endQuestionNow() {
                 clearInterval(this.timerInterval);
                 try {
+                    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                    const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '{{ csrf_token() }}';
                     const res = await fetch('/api/host/' + this.pin + '/end-question', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-CSRF-TOKEN': csrfToken,
                             'Accept': 'application/json'
-                        }
+                        },
+                        body: JSON.stringify({
+                            question_id: this.currentQuestion ? (this.currentQuestion.questionId || this.currentQuestion.id) : null
+                        })
                     });
                     const data = await res.json();
                     if (data.success) {
@@ -726,7 +855,7 @@
                         if (window.SmartFunAudio) window.SmartFunAudio.playCorrect();
                     }
                 } catch (e) {
-                    console.error(e);
+                    console.error('Error ending question:', e);
                 }
             },
 
@@ -790,15 +919,29 @@
 
             getOptionVotes(optId) {
                 if (this.questionResult && this.questionResult.answerDistribution) {
-                    return this.questionResult.answerDistribution[optId] || 0;
+                    return Number(this.questionResult.answerDistribution[optId] ?? this.questionResult.answerDistribution[String(optId)] ?? 0);
                 }
                 return 0;
             },
 
+            getTotalQuestionVotes() {
+                if (this.questionResult && this.questionResult.answerDistribution) {
+                    const values = Object.values(this.questionResult.answerDistribution);
+                    return values.reduce((a, b) => a + Number(b), 0);
+                }
+                return this.answeredCount || 0;
+            },
+
+            getOptionVotePercent(optId) {
+                const total = this.getTotalQuestionVotes();
+                if (total <= 0) return 0;
+                return Math.round((this.getOptionVotes(optId) / total) * 100);
+            },
+
             getVoteHeightPercent(optId) {
                 const votes = this.getOptionVotes(optId);
-                const maxVotes = Math.max(1, ...Object.values(this.questionResult?.answerDistribution || { 0: 1 }));
-                return Math.max(10, (votes / maxVotes) * 100);
+                const maxVotes = Math.max(1, ...Object.values(this.questionResult?.answerDistribution || { 0: 1 }).map(Number));
+                return Math.max(14, Math.round((votes / maxVotes) * 90));
             },
 
             triggerConfetti() {

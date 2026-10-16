@@ -238,10 +238,11 @@ class HostController extends Controller
     /**
      * Host ends current question early to show answer distribution.
      */
-    public function endQuestion(string $pin): JsonResponse
+    public function endQuestion(Request $request, string $pin): JsonResponse
     {
         try {
-            $result = $this->gameEngine->endCurrentQuestion($pin);
+            $questionId = $request->input('question_id');
+            $result = $this->gameEngine->endCurrentQuestion($pin, $questionId ? (int) $questionId : null);
 
             return response()->json([
                 'success' => true,
@@ -273,6 +274,32 @@ class HostController extends Controller
                 'message' => $e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * Host updates the visual and audio theme during a session.
+     */
+    public function updateTheme(Request $request, string $pin): JsonResponse
+    {
+        $validated = $request->validate([
+            'theme' => 'required|string|in:arcade,space,fantasy,cyberpunk,lava',
+        ]);
+
+        $session = GameSession::where('pin', $pin)->first();
+
+        if (! $session) {
+            return response()->json(['success' => false, 'message' => 'Sesi tidak ditemukan'], 404);
+        }
+
+        $settings = $session->settings ?? [];
+        $settings['theme'] = $validated['theme'];
+        $session->settings = $settings;
+        $session->save();
+
+        return response()->json([
+            'success' => true,
+            'theme' => $validated['theme'],
+        ]);
     }
 
     /**

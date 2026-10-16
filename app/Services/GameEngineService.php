@@ -483,11 +483,21 @@ class GameEngineService
      *
      * @return array<string, mixed>
      */
-    public function endCurrentQuestion(string $pin): array
+    public function endCurrentQuestion(string $pin, ?int $questionId = null): array
     {
         $session = GameSession::with('quiz.questions.options')->where('pin', $pin)->firstOrFail();
-        $currentIndex = $session->current_question_index;
-        $question = $session->quiz->questions->firstWhere('order_index', $currentIndex);
+        $questions = $this->getSessionQuestions($session);
+
+        $question = null;
+        if ($questionId) {
+            $question = $questions->firstWhere('id', $questionId) ?? Question::with('options')->find($questionId);
+        }
+        if (! $question && $session->current_question_index > 0 && $session->current_question_index <= $questions->count()) {
+            $question = $questions->get($session->current_question_index - 1);
+        }
+        if (! $question) {
+            $question = $questions->first();
+        }
 
         if (! $question) {
             return [];
@@ -497,20 +507,25 @@ class GameEngineService
 
         // Calculate distribution of answers
         $distribution = [];
+        $totalAnswers = 0;
         foreach ($question->options as $opt) {
-            $distribution[$opt->id] = GameAnswer::where('game_session_id', $session->id)
+            $count = GameAnswer::where('game_session_id', $session->id)
                 ->where('question_id', $question->id)
                 ->where('option_id', $opt->id)
                 ->count();
+            $distribution[$opt->id] = $count;
+            $totalAnswers += $count;
         }
 
         $topFive = $this->getLiveLeaderboard($pin, 5);
 
         $payload = [
+            'questionId' => $question->id,
             'correctOptionId' => $correctOption ? $correctOption->id : null,
             'explanation' => $question->explanation,
             'topFive' => $topFive,
             'answerDistribution' => $distribution,
+            'totalAnswers' => $totalAnswers,
         ];
 
         try {

@@ -85,6 +85,18 @@ class SoundEngine {
                 hatSteps: [1, 3, 5, 7, 9, 11, 13, 15],
                 leadWave: 'sawtooth',
                 bassWave: 'triangle'
+            },
+            lobby: {
+                bpm: 114,
+                // Bouncy funny cartoon / elevator walking bass
+                bassNotes: [130.81, 0, 164.81, 0, 196.00, 0, 220.00, 196.00, 174.61, 0, 164.81, 0, 146.83, 0, 123.47, 0],
+                // Playful, cute, funny bouncing cartoon melody
+                leadNotes: [523.25, 0, 659.25, 0, 783.99, 880.00, 783.99, 0, 698.46, 0, 659.25, 587.33, 523.25, 0, 0, 783.99],
+                kickSteps: [0, 8],
+                snareSteps: [4, 12],
+                hatSteps: [2, 6, 10, 14],
+                leadWave: 'sine',
+                bassWave: 'triangle'
             }
         };
 

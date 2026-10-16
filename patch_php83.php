@@ -90,7 +90,22 @@ if (file_exists($varClonerFile)) {
     }
 }
 
-// 7. Patch AddConsoleCommandPass.php (wrap new Definition in parentheses)
+// 7. Patch Symfony Command.php (dereference in getCommandAttribute)
+$commandFile = __DIR__ . '/vendor/symfony/console/Command/Command.php';
+if (file_exists($commandFile)) {
+    $content = file_get_contents($commandFile);
+    $old = '$attribute = (new \ReflectionClass(static::class)->getAttributes(AsCommand::class)[0] ?? null)?->newInstance();';
+    $new = '$reflection = new \ReflectionClass(static::class);' . "\n" . '            $attribute = ($reflection->getAttributes(AsCommand::class)[0] ?? null)?->newInstance();';
+    $newContent = str_replace($old, $new, $content);
+    if ($newContent !== $content) {
+        file_put_contents($commandFile, $newContent);
+        echo "✅ Symfony Command.php berhasil disesuaikan untuk PHP 8.3.\n";
+    } else {
+        echo "ℹ️ Symfony Command.php sudah kompatibel.\n";
+    }
+}
+
+// 8. Patch AddConsoleCommandPass.php (wrap new Definition in parentheses)
 $passFile = __DIR__ . '/vendor/symfony/console/DependencyInjection/AddConsoleCommandPass.php';
 if (file_exists($passFile)) {
     $content = file_get_contents($passFile);
@@ -105,7 +120,19 @@ if (file_exists($passFile)) {
     }
 }
 
-// 8. Patch PHPUnit Version.php
+// 9. Patch Sebastian Exporter.php
+$exporterFile = __DIR__ . '/vendor/sebastian/exporter/src/Exporter.php';
+if (file_exists($exporterFile)) {
+    $content = file_get_contents($exporterFile);
+    $newContent = str_replace('new ReflectionClass($value)->', '(new ReflectionClass($value))->', $content);
+    $newContent = str_replace('new ReflectionObject($value)->', '(new ReflectionObject($value))->', $newContent);
+    if ($newContent !== $content) {
+        file_put_contents($exporterFile, $newContent);
+        echo "✅ Sebastian Exporter.php disesuaikan.\n";
+    }
+}
+
+// 10. Patch PHPUnit Version.php
 $versionFile = __DIR__ . '/vendor/phpunit/phpunit/src/Runner/Version.php';
 if (file_exists($versionFile)) {
     $content = file_get_contents($versionFile);
